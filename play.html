@@ -21,7 +21,7 @@
 	<div class="video-wrapper js-video-wrapper">
 		<div class="video-responsive">
 			<video class="video js-video" muted>
-				<source src="./1602818478081070.mp4" type=video/mp4> 
+				<source src="./w.mp4" type=video/mp4> 
 				<!-- <source src=http://techslides.com/demos/sample-videos/small.ogv type=video/ogg> 
 				<source src=http://techslides.com/demos/sample-videos/small.mp4 type=video/mp4>
 				<source src=http://techslides.com/demos/sample-videos/small.3gp type=video/3gp> -->
@@ -34,26 +34,116 @@
 				</div>
 			</div>
 		</div>
-   </div>
+	</div>
+	<div class="video-wrapper" id="video-container">
+		
+	</div>
+
    <div class="content">
-      <img id="img1" src="picture_frame_PNG195.png"style="width:25%; height:25%;">
-   <div id=time></div>
-   </div>
-   
-   	<p class="margin-top-50">
+      <img id="img1" src="picture_frame_PNG195.png"style="width:25%; height:25%;display:none">
+		<div id=time></div>
+		<p class="margin-top-50">
 			Released under MIT licence.
 		</p>
+   </div>
+   
+   	
 	<script src="js/jquery.min.js" ></script>
 	<script src="js/canvas-video-player.js"></script>
-
+	<script src="js/jmgraph.js"></script>
+	<script type="text/template" id="t-timeline">
+		<div id="timeline" class="video-timeline js-timeline">
+			<div class="video-timeline-passed js-timeline-passed">
+			</div>
+		</div>
+	</script>
 
 	<script>
-		var canvasVideo = new CanvasVideoPlayer({
-			videoSelector: '.js-video',
-			canvasSelector: '.js-canvas',
-			timelineSelector: '.js-timeline',
-			audio: true
+		var con = document.getElementById("video-container");
+
+		var g = jmGraph.create('video-container', {
+			width: 500,
+			height: 350
 		});
+		
+		var style = {
+			stroke: '#F00',
+			lineType: 'dotted',
+			lineWidth: 2, //边线宽
+					 //fill: 'yellow',
+					 
+		};
+		//style.opacity = 0.2;		
+
+		//创建一个椭圆
+		var arc1 = g.createShape('arc', {
+				style: style,
+				center: {x:100, y:150},
+				width: 120,
+				height: 80
+		});	
+		arc1.canMove(true); 
+		g.children.add(arc1);
+
+		var rect = g.createShape('rect', {
+			style: style,
+			position: {x:100, y:20},
+			width: 120,
+			height: 80
+		});
+
+		g.children.add(rect);
+
+		window.rect = rect;
+		
+		//创建一个resize
+		var resize = g.createShape('resize', {
+                style: style,
+                position: {x:100-60 , y:150-40},
+                width: 120,
+                height: 80
+			});	
+			//大小改变事件
+			resize.on('resize', function() {
+
+				arc1.center.x = this.position.x + this.width / 2;
+				arc1.center.y = this.position.y + this.height / 2;
+				arc1.width = this.width;
+				arc1.height =this.height;
+
+				console.log(arguments);
+			});	
+			//大小改变事件
+			resize.on('move', function() {
+
+				arc1.center.x +=  arguments[2]/2;
+				arc1.center.y +=  arguments[3]/2;
+				arc1.width += arguments[2];
+				arc1.height += arguments[3];
+
+				console.log(arguments);
+			});
+			resize.canMove(true);
+            g.children.add(resize); 
+
+		// window.g = g;
+		// window.arc = arc1;
+		//requestAnimationFrame(update);
+		//$(con).append($("#t-timeline").html());
+
+		// var canvasVideo = new CanvasVideoPlayer({
+		// 	videoSelector: '.js-video',
+		// 	canvasSelector: '#video-container>canvas',
+		// 	//timelineSelector: '#timeline',
+		// 	audio: true
+		// });
+
+		function update() {
+				g.needUpdate && g.redraw();
+				requestAnimationFrame(update);
+		}
+
+		update();
 	</script>
 </body>
 </html>

@@ -1,0 +1,27 @@
+{
+  "name": "canvas_video_demo",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wangchengyu/video_in_canvas.git"
+  },
+  "keywords": [
+    "html5",
+    "canvas",
+    "video"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wangchengyu/video_in_canvas/issues"
+  },
+  "homepage": "https://github.com/wangchengyu/video_in_canvas#readme",
+  "dependencies": {
+    "jmgraph": "^3.1.69"
+  }
+}

@@ -128,9 +128,9 @@ CanvasVideoPlayer.prototype.bind = function() {
 	var self = this;
 
 	// Playes or pauses video on canvas click
-	this.canvas.addEventListener('click', cvpHandlers.canvasClickHandler = function() {
-		self.playPause();
-	});
+	// this.canvas.addEventListener('click', cvpHandlers.canvasClickHandler = function() {
+	// 	self.playPause();
+	// });
 
 	// On every time update draws frame
 	this.video.addEventListener('timeupdate', cvpHandlers.videoTimeUpdateHandler = function() {
@@ -272,7 +272,7 @@ CanvasVideoPlayer.prototype.drawFrame = function() {
 
 	document.getElementById("time").innerHTML = this.video.currentTime;
 
-
+	window.arc.paint();
 
 	if (this.video.currentTime > 4 && this.video.currentTime < 5)
 		this.ctx.drawImage(document.getElementById("img1"), 78, 248, 60, 35);

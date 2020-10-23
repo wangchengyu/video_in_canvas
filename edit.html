@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" >
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, width=device-width">
+
+    <title>HTML canvas video player</title>
+
+    <link rel="stylesheet" href="skyblue.css">
+    <link rel="stylesheet" href="demo/demo.css">
+</head>
+<style>
+    .progressBar
+    {
+        position: relative;
+        width: 100%;
+        height:10px;
+        background-color: #000;
+        display: none;
+    }
+    .timeBar
+    {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 100%;
+        background-color: #ccc;
+    }
+</style>
+<body>
+<div class="header">
+    <div class="content">
+        <a href="https://github.com/wangchengyu/video_in_canvas" class="padding-right-20">GitHub</a>
+        <a href="https://github.com/wangchengyu/video_in_canvas/archive/master.zip">Download</a>
+    </div>
+</div>
+<div class="video-wrapper js-video-wrapper">
+    <div class="video-responsive" id="player">
+        <video class="video js-video" id="video-1" width="960" height="540" muted>
+            <source src="./LiSA.mp4" type=video/mp4>
+            <!-- <source src=http://techslides.com/demos/sample-videos/small.ogv type=video/ogg>
+            <source src=http://techslides.com/demos/sample-videos/small.mp4 type=video/mp4>
+            <source src=http://techslides.com/demos/sample-videos/small.3gp type=video/3gp> -->
+        </video>
+
+        <canvas class="canvas js-canvas"></canvas>
+
+        <div class="video-timeline js-timeline">
+            <div class="video-timeline-passed js-timeline-passed">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="content">
+    <div class="row">
+        <div class="col md-8">
+            <div class="video-wrapper">
+                <div id="video-container"></div>
+                <div class="progressBar">
+                    <div class="timeBar"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col md-4">
+            <div class="row">
+                <div class="col md-12">
+                    <a class="btn btn-success" onclick="video.play()">Play</a>
+                </div>
+                <div class="col md-12">
+                    <a class="btn btn-danger" onclick="video.pause()">Pause</a>
+                </div>
+                <div class="col md-12">
+                    <label>Current Time</label><input type="number" class="js-current" placeholder="currentTime" step="0.001"/>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+
+    </div>
+    <hr>
+    <div class="row">
+        <div class="col md-2">
+            <label><input type="radio" name="element_type" checked>rect</label>
+        </div>
+        <div class="col md-2">
+            <label><input type="radio" name="element_type" disabled>circle</label>
+        </div>
+        <div class="col md-2">
+            <label><input type="radio" name="element_type" disabled>text</label>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col md-2">
+            <input type="text" class="form-control" placeholder="top" value="100"/>
+        </div>
+        <div class="col md-2">
+            <input type="text" class="form-control" placeholder="left" value="100"/>
+        </div>
+        <div class="col md-2">
+            <input type="text" class="form-control" placeholder="width" value="100"/>
+        </div>
+        <div class="col md-2">
+            <input type="text" class="form-control" placeholder="height" value="100"/>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col md-3">
+            start: <input type="number" class="form-control js-current" placeholder="start_time" value="0.00" step="0.01"/>
+        </div>
+        <div class="col md-3">
+            end: <input type="number" class="form-control" placeholder="end_time" value="1.00" step="0.01"/>
+        </div>
+        <div class="col md-2">
+            <input type="text" class="form-control" placeholder="color" value="#F00"/>
+        </div>
+        <div class="col md-2">
+            <a class="btn btn-danger" onclick="add_new_element()">add new element</a>
+        </div>
+    </div>
+    <img id="img1" src="picture_frame_PNG195.png"style="width:25%; height:25%;display:none">
+    <div id=time></div>
+
+    <p class="margin-top-50">
+        Released under MIT licence.
+    </p>
+</div>
+
+
+<script src="js/jquery.min.js" ></script>
+<script src="js/canvas-video-player.js"></script>
+<script src="js/jmgraph.js"></script>
+<script type="text/template" id="t-timeline">
+    <div id="timeline" class="video-timeline js-timeline">
+        <div class="video-timeline-passed js-timeline-passed">
+        </div>
+    </div>
+</script>
+
+<script>
+    var con = document.getElementById("video-container");
+
+    // it will create a canvas under this div named "video-container"
+    var g = jmGraph.create('video-container', {
+        width: 960 * 0.75,  // this is the size of video
+        height: 540 * 0.75,
+    });
+
+    // this is the context for canvas
+    var canvas = $("#video-container>canvas").get(0);
+    var ctx = canvas.getContext('2d');
+    // video dom
+    var video = document.getElementById("video-1");
+
+    var currentTime = $("input[placeholder=currentTime]").get(0);
+
+
+
+    var action_rect = null;
+
+    g.on("mousedown", (event) => {
+        //console.log(event);
+        action_rect = g.createShape("rect", {
+            style: {stroke:"#ccc", lineType:"dotted", lineWidth: 1},
+            position: {x: event.position.x, y: event.position.y},
+            width: 0,
+            height: 0,
+        })
+
+        g.children.add(action_rect);
+
+        action_rect.start_time = video.currentTime - 0.01
+        action_rect.end_time = video.currentTime + 0.01
+    });
+
+    g.on("mousemove", (event) => {
+
+        $("input[placeholder=top]").val(event.position.y);
+        $("input[placeholder=left]").val(event.position.x);
+
+        if (action_rect === null) {
+            return ;
+        }
+
+        action_rect.width = event.position.x - action_rect.position.x;
+        action_rect.height = event.position.y - action_rect.position.y;
+
+    });
+
+    g.on("mouseup", (event) => {
+
+        if (action_rect === null) {
+            return ;
+        }
+
+        var item = g.createShape("rect", {
+            style: {stroke:"#F00",  lineWidth: 2},
+            position: {x: action_rect.position.x, y: action_rect.position.y},
+            width: action_rect.width,
+            height: action_rect.height
+        });
+
+        item.start_time = $("input[placeholder=start_time]").val() -0.01;
+        item.end_time = $("input[placeholder=end_time]").val(),
+
+        g.children.add(item);
+        g.children.remove(action_rect);
+
+        action_rect = null;
+
+    });
+
+    // window.g = g;
+    // window.arc = arc1;
+    //requestAnimationFrame(update);
+    //$(con).append($("#t-timeline").html());
+
+    // var canvasVideo = new CanvasVideoPlayer({
+    // 	videoSelector: '.js-video',
+    // 	canvasSelector: '#video-container>canvas',
+    // 	//timelineSelector: '#timeline',
+    // 	audio: true
+    // });
+
+    function update() {
+
+        if (g.children) {
+            g.children.each((i, item) => {
+                item.visible = video.currentTime > item.start_time && video.currentTime < item.end_time;
+            })
+        }
+
+        if (video.paused) {
+            if (g.needUpdate) {
+                g.redraw();
+            }
+        } else {
+            currentTime.value = video.currentTime;
+
+            if (ctx) {
+                ctx.drawImage(video, 0,0, canvas.width, canvas.height);
+
+                if (g.children) {
+                    g.children.each((i, item) => {
+                        if (item.visible)
+                            item.paint();
+                    })
+                }
+            }
+        }
+
+
+
+        requestAnimationFrame(update);
+    }
+
+    update();
+
+    const add_new_element = function() {
+        let top         = Number.parseFloat($("input[placeholder=top]").val());
+        let left        = Number.parseFloat($("input[placeholder=left]").val());
+        let width       = Number.parseFloat($("input[placeholder=width]").val());
+        let height      = Number.parseFloat($("input[placeholder=height]").val());
+        let start_time  = Number.parseFloat($("input[placeholder=start_time]").val());
+        let end_time    = Number.parseFloat($("input[placeholder=end_time]").val());
+        let color       = $("input[placeholder=color]").val();
+
+        let rect = {
+            style: {stroke: color,  lineWidth: 2},
+            position: {x: left, y: top},
+            width: width,
+            height: height
+        }
+
+        let item = g.createShape("rect", rect);
+
+        item.start_time = start_time;
+        item.end_time = end_time;
+
+        g.children.add(item);
+    }
+
+    $(function() {
+        $(".js-current").change(function() {
+            video.currentTime = Number.parseFloat($(this).val());
+            currentTime.value = video.currentTime;
+        });
+
+        video.ontimeupdate = () => {
+             if (video.paused)
+                 g.redraw();
+        }
+
+        // set fill the video under element
+        g.style = {fillStyle: function () {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        }};
+
+        video.currentTime = 0.01;
+
+        setTimeout(function() {
+            g.redraw();
+        }, 500);
+    });
+
+</script>
+</body>
+</html>
