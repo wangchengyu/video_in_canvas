@@ -1533,9 +1533,12 @@ var jmControl = /*#__PURE__*/function (_jmProperty) {
 
         this.__mvMonitor.mv = function (evt) {
           var _this = self; //如果鼠标经过当前可移动控件，则显示可移动指针
-          //if(evt.path && evt.path.indexOf(_this)>-1) {
-          //	_this.cursor('move');	
-          //}
+
+          if(evt.path && evt.path.indexOf(_this)>-1) {
+          	_this.parent.canvas.style.cursor = 'move'
+          } else {
+            _this.parent.canvas.style.cursor = 'default'
+          }
 
           if (_this.__mvMonitor.mouseDown) {
             _this.parent.bounds = null;
@@ -1590,7 +1593,8 @@ var jmControl = /*#__PURE__*/function (_jmProperty) {
           var _this = self;
 
           if (_this.__mvMonitor.mouseDown) {
-            _this.__mvMonitor.mouseDown = false; //_this.cursor('default');
+            _this.__mvMonitor.mouseDown = false;
+            _this.parent.canvas.style.cursor = 'default';
 
             _this.emit('moveend', {
               position: _this.__mvMonitor.curposition
@@ -1610,7 +1614,8 @@ var jmControl = /*#__PURE__*/function (_jmProperty) {
           var _this = self;
 
           if (_this.__mvMonitor.mouseDown) {
-            _this.__mvMonitor.mouseDown = false; //_this.cursor('default');	
+            _this.__mvMonitor.mouseDown = false;
+            _this.parent.canvas.style.cursor = 'default';
 
             _this.emit('moveend', {
               position: _this.__mvMonitor.curposition

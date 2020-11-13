@@ -10,25 +10,6 @@
     <link rel="stylesheet" href="skyblue.css">
     <link rel="stylesheet" href="demo/demo.css">
 </head>
-<style>
-    .progressBar
-    {
-        position: relative;
-        width: 100%;
-        height:10px;
-        background-color: #000;
-        display: none;
-    }
-    .timeBar
-    {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 0;
-        height: 100%;
-        background-color: #ccc;
-    }
-</style>
 <body>
 <div class="header">
     <div class="content">
@@ -39,18 +20,13 @@
 <div class="video-wrapper js-video-wrapper">
     <div class="video-responsive" id="player">
         <video class="video js-video" id="video-1" width="960" height="540" muted>
-            <source src="./LiSA.mp4" type=video/mp4>
+            <source src="./w.mp4" type=video/mp4>
             <!-- <source src=http://techslides.com/demos/sample-videos/small.ogv type=video/ogg>
             <source src=http://techslides.com/demos/sample-videos/small.mp4 type=video/mp4>
             <source src=http://techslides.com/demos/sample-videos/small.3gp type=video/3gp> -->
         </video>
 
         <canvas class="canvas js-canvas"></canvas>
-
-        <div class="video-timeline js-timeline">
-            <div class="video-timeline-passed js-timeline-passed">
-            </div>
-        </div>
     </div>
 </div>
 
@@ -61,8 +37,9 @@
         <div class="col md-8">
             <div class="video-wrapper">
                 <div id="video-container"></div>
-                <div class="progressBar">
-                    <div class="timeBar"></div>
+                <div class="video-timeline js-timeline">
+                    <div class="video-timeline-passed js-timeline-passed">
+                    </div>
                 </div>
             </div>
         </div>
@@ -75,7 +52,15 @@
                     <a class="btn btn-danger" onclick="video.pause()">Pause</a>
                 </div>
                 <div class="col md-12">
-                    <label>Current Time</label><input type="number" class="js-current" placeholder="currentTime" step="0.001"/>
+                    <label>Video Current Time</label><input type="number" class="js-current" placeholder="currentTime" step="0.001"/>
+                </div>
+                <div class="col md-12">
+                    <label>Mouse Position</label>
+                    <span >top:
+                        <input type="number" class="js-mouse_top" ></span><br>
+                    <span >left:
+                        <input type="number" class="js-mouse_left" ></span>
+
                 </div>
             </div>
         </div>
@@ -87,47 +72,44 @@
     <hr>
     <div class="row">
         <div class="col md-2">
-            <label><input type="radio" name="element_type" checked>rect</label>
+            <label><input type="radio" name="element_type" class="js-rect" checked>rect</label>
         </div>
         <div class="col md-2">
-            <label><input type="radio" name="element_type" disabled>circle</label>
+            <label><input type="radio" name="element_type" disabled >arrawline</label>
         </div>
         <div class="col md-2">
             <label><input type="radio" name="element_type" disabled>text</label>
         </div>
     </div>
 
-    <div class="row">
+    <div class="row js-rect-editor" style="display:none;">
         <div class="col md-2">
-            <input type="text" class="form-control" placeholder="top" value="100"/>
+            top: <input type="text" placeholder="top" value="100"/>
         </div>
         <div class="col md-2">
-            <input type="text" class="form-control" placeholder="left" value="100"/>
+            left: <input type="text"  placeholder="left" value="100"/>
         </div>
         <div class="col md-2">
-            <input type="text" class="form-control" placeholder="width" value="100"/>
+            width:<input type="text" placeholder="width" value="100"/>
         </div>
         <div class="col md-2">
-            <input type="text" class="form-control" placeholder="height" value="100"/>
+            height: <input type="text" placeholder="height" value="100"/>
+        </div>
+        <div class="col md-2">
+            duration: <input type="text" placeholder="duration" value="3"/>
         </div>
     </div>
-    <div class="row">
-        <div class="col md-3">
-            start: <input type="number" class="form-control js-current" placeholder="start_time" value="0.00" step="0.01"/>
-        </div>
-        <div class="col md-3">
-            end: <input type="number" class="form-control" placeholder="end_time" value="1.00" step="0.01"/>
+    <div class="row js-rect-editor" style="padding-top: 10px; padding-bottom: 10px; display:none">
+        <div class="col md-2">
+            <a class="btn btn-danger" onclick="add_new_element()">add </a>
         </div>
         <div class="col md-2">
-            <input type="text" class="form-control" placeholder="color" value="#F00"/>
-        </div>
-        <div class="col md-2">
-            <a class="btn btn-danger" onclick="add_new_element()">add new element</a>
+            <a class="btn btn-danger" onclick="cancel_temp_element()">cancel</a>
         </div>
     </div>
-    <img id="img1" src="picture_frame_PNG195.png"style="width:25%; height:25%;display:none">
-    <div id=time></div>
-
+    <div class="row js-hint">
+        Please <b>click</b> the progress bar to the appropriate time and <b>drag</b> as rect！
+    </div>
     <p class="margin-top-50">
         Released under MIT licence.
     </p>
@@ -137,83 +119,133 @@
 <script src="js/jquery.min.js" ></script>
 <script src="js/canvas-video-player.js"></script>
 <script src="js/jmgraph.js"></script>
-<script type="text/template" id="t-timeline">
-    <div id="timeline" class="video-timeline js-timeline">
-        <div class="video-timeline-passed js-timeline-passed">
-        </div>
-    </div>
-</script>
 
 <script>
     var con = document.getElementById("video-container");
 
     // it will create a canvas under this div named "video-container"
+    var div_width = con.clientWidth;
+    var div_height = div_width * 540 / 960
+
     var g = jmGraph.create('video-container', {
-        width: 960 * 0.75,  // this is the size of video
-        height: 540 * 0.75,
+        width: div_width,  // this is the size of video
+        height: div_height,
+    });
+
+    var canvasVideo = new CanvasVideoPlayer({
+    	videoSelector: '.js-video',
+    	canvasSelector: g.canvas,
+    	timelineSelector: '.video-timeline',
+    	audio: true
     });
 
     // this is the context for canvas
-    var canvas = $("#video-container>canvas").get(0);
+    var canvas = g.canvas;
     var ctx = canvas.getContext('2d');
     // video dom
     var video = document.getElementById("video-1");
 
-    var currentTime = $("input[placeholder=currentTime]").get(0);
+    var currentTime = $("input[placeholder=currentTime]");
 
 
 
     var action_rect = null;
+    var edit_state = false
 
-    g.on("mousedown", (event) => {
-        //console.log(event);
-        action_rect = g.createShape("rect", {
-            style: {stroke:"#ccc", lineType:"dotted", lineWidth: 1},
-            position: {x: event.position.x, y: event.position.y},
-            width: 0,
-            height: 0,
-        })
+    g.bind("mousedown", (event) => {
+        if ($(".js-rect").prop("checked") && action_rect == null && !edit_state) {
 
-        g.children.add(action_rect);
+            $(".js-rect-editor").show();
+            $(".js-hint").hide();
 
-        action_rect.start_time = video.currentTime - 0.01
-        action_rect.end_time = video.currentTime + 0.01
+            //console.log(event);
+            action_rect = g.createShape("rect", {
+                style: {stroke:"#ccc", lineType:"dotted", lineWidth: 3},
+                position: {x: event.position.x, y: event.position.y},
+                width: 0,
+                height: 0,
+            })
+
+            action_rect.resizing = true;
+
+            g.children.add(action_rect); //temp rect
+
+            action_rect.start_time = video.currentTime - 0.001 //for show at this time point
+            action_rect.end_time = video.currentTime + 3
+
+            //update input
+            $("input[placeholder=top]").val(action_rect.position.y);
+            $("input[placeholder=left]").val(action_rect.position.x);
+
+            edit_state = true;
+        }
+
+        if ($(".js-arrawline").prop("checked")) {
+
+        }
+
+        return true;
     });
 
-    g.on("mousemove", (event) => {
+    g.bind("mousemove", (event) => {
 
-        $("input[placeholder=top]").val(event.position.y);
-        $("input[placeholder=left]").val(event.position.x);
+        $(".js-mouse_top").val(event.position.y);
+        $(".js-mouse_left").val(event.position.x);
+
+        if ($(".js-rect").prop("checked") && action_rect !== null && edit_state) {
+
+            if (event.event.buttons === 0)
+                return ;
+
+            if (!action_rect.resizing)
+                return ;
+
+            action_rect.width = event.position.x - action_rect.position.x;
+            action_rect.height = event.position.y - action_rect.position.y;
+
+            //update input
+            $("input[placeholder=width]").val(action_rect.width);
+            $("input[placeholder=height]").val(action_rect.height);
+
+            return ;
+        }
+
+
+    });
+
+    g.bind("mouseup", (event) => {
 
         if (action_rect === null) {
             return ;
         }
 
-        action_rect.width = event.position.x - action_rect.position.x;
-        action_rect.height = event.position.y - action_rect.position.y;
-
-    });
-
-    g.on("mouseup", (event) => {
-
-        if (action_rect === null) {
-            return ;
+        if (action_rect.width < 2 && action_rect.height < 2) {
+            exit_edit_state();
         }
-
-        var item = g.createShape("rect", {
-            style: {stroke:"#F00",  lineWidth: 2},
-            position: {x: action_rect.position.x, y: action_rect.position.y},
-            width: action_rect.width,
-            height: action_rect.height
+        action_rect.style.stroke = "#F00";
+        action_rect.canMove(true);
+        action_rect.bind("moveend", function() {
+            $("input[placeholder=top]").val(action_rect.position.y);
+            $("input[placeholder=left]").val(action_rect.position.x);
         });
+        action_rect.resizing = false;
 
-        item.start_time = $("input[placeholder=start_time]").val() -0.01;
-        item.end_time = $("input[placeholder=end_time]").val(),
+        // var item = g.createShape("rect", {
+        //     style: {stroke:"#F00",  lineWidth: 2},
+        //     position: {x: action_rect.position.x, y: action_rect.position.y},
+        //     width: action_rect.width,
+        //     height: action_rect.height
+        // });
+        //
+        // item.start_time = $("input[placeholder=start_time]").val() -0.01;
+        // item.end_time = $("input[placeholder=end_time]").val(),
+        //
+        // g.children.add(item);
+        // g.children.remove(action_rect);
 
-        g.children.add(item);
-        g.children.remove(action_rect);
+        //action_rect = null;
 
-        action_rect = null;
+
 
     });
 
@@ -229,7 +261,7 @@
     // 	audio: true
     // });
 
-    function update() {
+    window.update = function() {
 
         if (g.children) {
             g.children.each((i, item) => {
@@ -242,7 +274,7 @@
                 g.redraw();
             }
         } else {
-            currentTime.value = video.currentTime;
+            currentTime.val(video.currentTime.toFixed(2));
 
             if (ctx) {
                 ctx.drawImage(video, 0,0, canvas.width, canvas.height);
@@ -268,29 +300,54 @@
         let left        = Number.parseFloat($("input[placeholder=left]").val());
         let width       = Number.parseFloat($("input[placeholder=width]").val());
         let height      = Number.parseFloat($("input[placeholder=height]").val());
-        let start_time  = Number.parseFloat($("input[placeholder=start_time]").val());
-        let end_time    = Number.parseFloat($("input[placeholder=end_time]").val());
-        let color       = $("input[placeholder=color]").val();
+        let start_time  = video.currentTime - 0.01; //Number.parseFloat($("input[placeholder=start_time]").val());
+        let end_time    = video.currentTime + Number.parseFloat($("input[placeholder=duration]").val());
+        //let color       = $("input[placeholder=color]").val();
 
-        let rect = {
-            style: {stroke: color,  lineWidth: 2},
-            position: {x: left, y: top},
-            width: width,
-            height: height
-        }
+        // let rect = {
+        //     style: {stroke: color,  lineWidth: 3, },
+        //     position: {x: left, y: top},
+        //     width: width,
+        //     height: height
+        // }
 
-        let item = g.createShape("rect", rect);
+        action_rect.style.stroke = "#F00";
+        action_rect.style.lineType = "solid";
+        action_rect.position.x = left;
+        action_rect.position.y = top;
+        action_rect.width = width;
+        action_rect.height = height;
+        action_rect.start_time = start_time;
+        action_rect.end_time = end_time;
 
-        item.start_time = start_time;
-        item.end_time = end_time;
+        action_rect = null;
+        edit_state = false;
 
-        g.children.add(item);
+        $(".js-rect-editor").hide();
+        $(".js-hint").show();
+    }
+
+    const cancel_temp_element = function() {
+        exit_edit_state();
+    }
+
+    const exit_edit_state = function() {
+        if (!action_rect)
+            return;
+
+        action_rect.canMove(false);
+        g.children.remove(action_rect);
+        action_rect = null;
+        edit_state = false;
+
+        $(".js-rect-editor").hide();
+        $(".js-hint").show();
     }
 
     $(function() {
         $(".js-current").change(function() {
             video.currentTime = Number.parseFloat($(this).val());
-            currentTime.value = video.currentTime;
+            currentTime.value = video.currentTime.toFixed(2);
         });
 
         video.ontimeupdate = () => {

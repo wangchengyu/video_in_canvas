@@ -23,7 +23,7 @@ var CanvasVideoPlayer = function(options) {
 	}
 
 	this.video = document.querySelector(this.options.videoSelector);
-	this.canvas = document.querySelector(this.options.canvasSelector);
+	this.canvas = this.options.canvasSelector; //这个canvas由jm控制
 	this.timeline = document.querySelector(this.options.timelineSelector);
 	this.timelinePassed = document.querySelector(this.options.timelineSelector + '> div');
 
@@ -87,7 +87,7 @@ var CanvasVideoPlayer = function(options) {
 CanvasVideoPlayer.prototype.init = function() {
 	this.video.load();
 
-	this.setCanvasSize();
+	//this.setCanvasSize();
 
 	if (this.options.hideVideo) {
 		this.video.style.display = 'none';
@@ -122,6 +122,8 @@ CanvasVideoPlayer.prototype.jumpTo = function(percentage) {
 	if (this.options.audio) {
 		this.audio.currentTime = this.audio.duration * percentage;
 	}
+
+	$("input[placeholder=currentTime]").val(Number(this.video.duration * percentage).toFixed(2));
 };
 
 CanvasVideoPlayer.prototype.bind = function() {
@@ -174,7 +176,7 @@ CanvasVideoPlayer.prototype.bind = function() {
 	});
 
 	this.unbind = function() {
-		this.canvas.removeEventListener('click', cvpHandlers.canvasClickHandler);
+		// this.canvas.removeEventListener('click', cvpHandlers.canvasClickHandler);
 		this.video.removeEventListener('timeupdate', cvpHandlers.videoTimeUpdateHandler);
 		this.video.removeEventListener('canplay', cvpHandlers.videoCanPlayHandler);
 		window.removeEventListener('resize', cvpHandlers.windowResizeHandler);
@@ -257,27 +259,17 @@ CanvasVideoPlayer.prototype.loop = function() {
 		}
 	}
 
-	if (this.playing) {
-		this.animationFrame = requestAnimationFrame(function(){
-			self.loop();
-		});
-	}
-	else {
-		cancelAnimationFrame(this.animationFrame);
-	}
+	// if (this.playing) {
+	// 	this.animationFrame = requestAnimationFrame(function(){
+	// 		self.loop();
+	// 	});
+	// }
+	// else {
+	// 	cancelAnimationFrame(this.animationFrame);
+	// }
 };
 
 CanvasVideoPlayer.prototype.drawFrame = function() {
-	this.ctx.drawImage(this.video, 0, 0, this.width, this.height);
-
-	document.getElementById("time").innerHTML = this.video.currentTime;
-
-	window.arc.paint();
-
-	if (this.video.currentTime > 4 && this.video.currentTime < 5)
-		this.ctx.drawImage(document.getElementById("img1"), 78, 248, 60, 35);
-	if (this.video.currentTime > 5.5 && this.video.currentTime < 6)
-		this.ctx.drawImage(document.getElementById("img1"), 78, 248, 60, 35);
-	if (this.video.currentTime > 6.5 && this.video.currentTime < 9)
-		this.ctx.drawImage(document.getElementById("img1"), 78, 248, 60, 35);
+	//this.ctx.drawImage(this.video, 0, 0, this.width, this.height);
+	//window.update();
 };

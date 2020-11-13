@@ -48,7 +48,7 @@ body {
 	background: rgba(255, 255, 255, 0.4);
 	bottom: 0;
 	cursor: pointer;
-	height: 12px;
+	height: 16px;
 	left: 0;
 	opacity: 1;
 	position: absolute;
@@ -61,11 +61,6 @@ body {
 	background: #E81D31;
 	height: 100%;
 	width: 0;
-}
-@media screen and (min-width: 768px) {
-	.video-timeline-passed {
-		background: rgba(255, 255, 255, 0.7);
-	}
 }
 
 
