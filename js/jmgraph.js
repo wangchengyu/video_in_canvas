@@ -5780,9 +5780,9 @@ var jmLabel = /*#__PURE__*/function (_jmControl) {
 
     params = params || {};
     _this = _super.call(this, params, t || 'jmLabel');
-    _this.style.font = _this.style.font || "15px Arial";
+    _this.style.font = _this.style.font || "48px Arial"; //TODO: here is problem
     _this.style.fontFamily = _this.style.fontFamily || 'Arial';
-    _this.style.fontSize = _this.style.fontSize || 15; // 显示不同的 textAlign 值
+    _this.style.fontSize = _this.style.fontSize || 60; // 显示不同的 textAlign 值
     //文字水平对齐
 
     _this.style.textAlign = _this.style.textAlign || 'left'; //文字垂直对齐
@@ -5867,7 +5867,7 @@ var jmLabel = /*#__PURE__*/function (_jmControl) {
       this.context.save(); // 修改字体，用来计算
 
       this.setStyle({
-        font: this.style.font || this.style.fontSize + 'px ' + this.style.fontFamily
+        font: this.style.fontSize + 'px ' + this.style.fontFamily
       }); //计算宽度
 
       this.__size = this.context.measureText ? this.context.measureText(this.text) : {
@@ -6136,7 +6136,7 @@ var jmLine = /*#__PURE__*/function (_jmPath) {
               y: start.y + dy * l,
               m: true
             });
-            l += dashLen;
+            l += dottedsp;
           }
 
           dottedstart = !dottedstart;

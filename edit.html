@@ -20,7 +20,7 @@
 <div class="video-wrapper js-video-wrapper">
     <div class="video-responsive" id="player">
         <video class="video js-video" id="video-1" width="960" height="540" muted>
-            <source src="./w.mp4" type=video/mp4>
+            <source src="./LiSA.mp4" type=video/mp4>
             <!-- <source src=http://techslides.com/demos/sample-videos/small.ogv type=video/ogg>
             <source src=http://techslides.com/demos/sample-videos/small.mp4 type=video/mp4>
             <source src=http://techslides.com/demos/sample-videos/small.3gp type=video/3gp> -->
@@ -75,10 +75,10 @@
             <label><input type="radio" name="element_type" class="js-rect" checked>rect</label>
         </div>
         <div class="col md-2">
-            <label><input type="radio" name="element_type" disabled >arrawline</label>
+            <label><input type="radio" name="element_type" class="js-arrawline" >arrawline</label>
         </div>
         <div class="col md-2">
-            <label><input type="radio" name="element_type" disabled>text</label>
+            <label><input type="radio" name="element_type" class="js-label" >label</label>
         </div>
     </div>
 
@@ -99,7 +99,42 @@
             duration: <input type="text" placeholder="duration" value="3"/>
         </div>
     </div>
-    <div class="row js-rect-editor" style="padding-top: 10px; padding-bottom: 10px; display:none">
+    <div class="row js-arrawline-editor" style="display:none;">
+        <div class="col md-2">
+            start x: <input type="text" placeholder="startx" value="100"/>
+        </div>
+        <div class="col md-2">
+            start y: <input type="text"  placeholder="starty" value="100"/>
+        </div>
+        <div class="col md-2">
+            end x:<input type="text" placeholder="endx" value="100"/>
+        </div>
+        <div class="col md-2">
+            end y: <input type="text" placeholder="endy" value="100"/>
+        </div>
+        <div class="col md-2">
+            duration: <input type="text" placeholder="duration" value="3"/>
+        </div>
+    </div>
+    <div class="row js-label-editor" style="display:none;">
+        <div class="col md-2">
+            top: <input type="text" placeholder="ltop" value="100"/>
+        </div>
+        <div class="col md-2">
+            left: <input type="text"  placeholder="lleft" value="100"/>
+        </div>
+        <div class="col md-2">
+            size:<input type="text" placeholder="size" value="24"/>
+        </div>
+        <div class="col md-2">
+            text: <input type="text" placeholder="text" value="demo text"/>
+        </div>
+        <div class="col md-2">
+            duration: <input type="text" placeholder="duration" value="3"/>
+        </div>
+    </div>
+
+    <div class="row js-rect-editor js-arrawline-editor js-label-editor" style="padding-top: 10px; padding-bottom: 10px; display:none">
         <div class="col md-2">
             <a class="btn btn-danger" onclick="add_new_element()">add </a>
         </div>
@@ -150,6 +185,8 @@
 
 
     var action_rect = null;
+    var action_arrawline = null;
+    var action_label = null;
     var edit_state = false
 
     g.bind("mousedown", (event) => {
@@ -182,6 +219,70 @@
 
         if ($(".js-arrawline").prop("checked")) {
 
+            $(".js-arrawline-editor").show();
+            $(".js-hint").hide();
+
+            //console.log(event);
+            action_arrawline = g.createShape("arrawline", {
+                style: {stroke:"#ccc", lineType:"dotted", lineWidth: 3, dashLength: 20},
+                start: {x: event.position.x, y: event.position.y},
+                end: {x: event.position.x, y: event.position.y}
+            })
+
+            action_arrawline.resizing = true;
+
+            g.children.add(action_arrawline); //temp rect
+
+            action_arrawline.start_time = video.currentTime - 0.001 //for show at this time point
+            action_arrawline.end_time = video.currentTime + 3
+
+            //update input
+            $("input[placeholder=startx]").val(action_arrawline.start.x);
+            $("input[placeholder=starty]").val(action_arrawline.start.y);
+
+            edit_state = true;
+        }
+
+        if ($(".js-label").prop("checked") && action_label == null && !edit_state) {
+
+            $(".js-label-editor").show();
+            $(".js-hint").hide();
+
+            //console.log(event);
+            action_label = g.createShape("label", {
+                style: {
+                    stroke:"#ccc",
+                    fill: "#ccc",
+                    textAlign: 'left',
+                    fontFamily: "Arial",
+                    fontSize: 60,
+                    border: {
+                        left:1,
+                        top:1,
+                        right:1,
+                        bottom:1,
+                        style: {
+                            stroke: 'red'
+                        }
+                    },
+                },
+                position: {x: event.position.x, y: event.position.y},
+                text: "demo text",
+
+            })
+
+            action_label.resizing = true;
+
+            g.children.add(action_label); //temp rect
+
+            action_label.start_time = video.currentTime - 0.001 //for show at this time point
+            action_label.end_time = video.currentTime + 3
+
+            //update input
+            $("input[placeholder=ltop]").val(action_label.position.y);
+            $("input[placeholder=lleft]").val(action_label.position.x);
+
+            edit_state = true;
         }
 
         return true;
@@ -210,56 +311,102 @@
             return ;
         }
 
+        if ($(".js-arrawline").prop("checked") && action_arrawline !== null && edit_state) {
+
+            if (event.event.buttons === 0)
+                return ;
+
+            if (!action_arrawline.resizing)
+                return ;
+
+            action_arrawline.end.x = event.position.x;
+            action_arrawline.end.y = event.position.y;
+
+            //update input
+            $("input[placeholder=endx]").val(action_arrawline.end.x);
+            $("input[placeholder=endy]").val(action_arrawline.end.y);
+
+            return true;
+        }
+
+        if ($(".js-label").prop("checked") && action_label !== null && edit_state) {
+
+            if (event.event.buttons === 0)
+                return ;
+
+            if (!action_label.resizing)
+                return ;
+
+            action_label.width = event.position.x - action_label.position.x;
+            action_label.height = event.position.y - action_label.position.y;
+            action_label.style.fontSize = action_label.height -4; // TODO: has a bug
+
+            //update input
+            $("input[placeholder=size]").val(action_label.style.fontSize);
+
+
+            return true;
+        }
 
     });
 
     g.bind("mouseup", (event) => {
+        //debugger;
+        if ($(".js-rect").prop("checked") && action_rect !== null && edit_state) {
 
-        if (action_rect === null) {
-            return ;
+            if (action_rect.width < 2 && action_rect.height < 2) {
+                exit_edit_state("rect");
+            }
+            action_rect.style.stroke = "#F00";
+            action_rect.canMove(true);
+            action_rect.bind("moveend", function() {
+                $("input[placeholder=top]").val(action_rect.position.y);
+                $("input[placeholder=left]").val(action_rect.position.x);
+            });
+            action_rect.resizing = false;
+
+            return true;
         }
 
-        if (action_rect.width < 2 && action_rect.height < 2) {
-            exit_edit_state();
+        if ($(".js-arrawline").prop("checked") && action_arrawline !== null && edit_state) {
+            if (action_arrawline === null) {
+                return ;
+            }
+
+            if (action_arrawline.width < 2 && action_arrawline.height < 2) {
+                exit_edit_state("arrawline");
+            }
+            action_arrawline.style.stroke = "#F00";
+            action_arrawline.canMove(true);
+            action_arrawline.bind("moveend", function() {
+                $("input[placeholder=starty]").val(action_arrawline.start.y);
+                $("input[placeholder=startx]").val(action_arrawline.start.x);
+                $("input[placeholder=endy]").val(action_arrawline.end.y);
+                $("input[placeholder=endx]").val(action_arrawline.end.x);
+            });
+
+            action_arrawline.resizing = false;
+
+            return true;
         }
-        action_rect.style.stroke = "#F00";
-        action_rect.canMove(true);
-        action_rect.bind("moveend", function() {
-            $("input[placeholder=top]").val(action_rect.position.y);
-            $("input[placeholder=left]").val(action_rect.position.x);
-        });
-        action_rect.resizing = false;
 
-        // var item = g.createShape("rect", {
-        //     style: {stroke:"#F00",  lineWidth: 2},
-        //     position: {x: action_rect.position.x, y: action_rect.position.y},
-        //     width: action_rect.width,
-        //     height: action_rect.height
-        // });
-        //
-        // item.start_time = $("input[placeholder=start_time]").val() -0.01;
-        // item.end_time = $("input[placeholder=end_time]").val(),
-        //
-        // g.children.add(item);
-        // g.children.remove(action_rect);
+        if ($(".js-label").prop("checked") && action_label !== null && edit_state) {
 
-        //action_rect = null;
+            if (action_label.width < 2 && action_label.height < 2) {
+                exit_edit_state("label");
+            }
+            // action_label.style.stroke = "#F00";
+            action_label.canMove(true);
+            action_label.bind("moveend", function() {
+                $("input[placeholder=ltop]").val(action_label.position.y);
+                $("input[placeholder=lleft]").val(action_label.position.x);
+            });
+            action_label.resizing = false;
 
-
-
+            return true;
+        }
     });
 
-    // window.g = g;
-    // window.arc = arc1;
-    //requestAnimationFrame(update);
-    //$(con).append($("#t-timeline").html());
-
-    // var canvasVideo = new CanvasVideoPlayer({
-    // 	videoSelector: '.js-video',
-    // 	canvasSelector: '#video-container>canvas',
-    // 	//timelineSelector: '#timeline',
-    // 	audio: true
-    // });
 
     window.update = function() {
 
@@ -296,52 +443,138 @@
     update();
 
     const add_new_element = function() {
-        let top         = Number.parseFloat($("input[placeholder=top]").val());
-        let left        = Number.parseFloat($("input[placeholder=left]").val());
-        let width       = Number.parseFloat($("input[placeholder=width]").val());
-        let height      = Number.parseFloat($("input[placeholder=height]").val());
-        let start_time  = video.currentTime - 0.01; //Number.parseFloat($("input[placeholder=start_time]").val());
-        let end_time    = video.currentTime + Number.parseFloat($("input[placeholder=duration]").val());
-        //let color       = $("input[placeholder=color]").val();
+        if ($(".js-rect").prop("checked") && action_rect !== null && edit_state) {
 
-        // let rect = {
-        //     style: {stroke: color,  lineWidth: 3, },
-        //     position: {x: left, y: top},
-        //     width: width,
-        //     height: height
-        // }
+            let top = Number.parseFloat($("input[placeholder=top]").val());
+            let left = Number.parseFloat($("input[placeholder=left]").val());
+            let width = Number.parseFloat($("input[placeholder=width]").val());
+            let height = Number.parseFloat($("input[placeholder=height]").val());
+            let start_time = video.currentTime - 0.01; //Number.parseFloat($("input[placeholder=start_time]").val());
+            let end_time = video.currentTime + Number.parseFloat($("input[placeholder=duration]").val());
 
-        action_rect.style.stroke = "#F00";
-        action_rect.style.lineType = "solid";
-        action_rect.position.x = left;
-        action_rect.position.y = top;
-        action_rect.width = width;
-        action_rect.height = height;
-        action_rect.start_time = start_time;
-        action_rect.end_time = end_time;
+            action_rect.style.stroke = "#F00";
+            action_rect.style.lineType = "solid";
+            action_rect.position.x = left;
+            action_rect.position.y = top;
+            action_rect.width = width;
+            action_rect.height = height;
+            action_rect.start_time = start_time;
+            action_rect.end_time = end_time;
 
-        action_rect = null;
-        edit_state = false;
+            action_rect = null;
+            edit_state = false;
 
-        $(".js-rect-editor").hide();
-        $(".js-hint").show();
+            $(".js-rect-editor").hide();
+            $(".js-hint").show();
+        }
+
+        if ($(".js-arrawline").prop("checked") && action_arrawline !== null && edit_state) {
+
+            let startx = Number.parseFloat($("input[placeholder=startx]").val());
+            let starty = Number.parseFloat($("input[placeholder=starty]").val());
+            let endx = Number.parseFloat($("input[placeholder=endx]").val());
+            let endy = Number.parseFloat($("input[placeholder=endy]").val());
+            let start_time = video.currentTime - 0.01; //Number.parseFloat($("input[placeholder=start_time]").val());
+            let end_time = video.currentTime + Number.parseFloat($("input[placeholder=duration]").val());
+
+            action_arrawline.style.stroke = "#F00";
+            action_arrawline.style.lineType = "solid";
+            action_arrawline.start.x = startx;
+            action_arrawline.start.y = starty;
+            action_arrawline.end.x = endx;
+            action_arrawline.end.y = endy;
+            action_arrawline.start_time = start_time;
+            action_arrawline.end_time = end_time;
+
+            action_arrawline = null;
+            edit_state = false;
+
+            $(".js-arrawline-editor").hide();
+            $(".js-hint").show();
+        }
+
+        if ($(".js-label").prop("checked") && action_label !== null && edit_state) {
+
+            let top = Number.parseFloat($("input[placeholder=ltop]").val());
+            let left = Number.parseFloat($("input[placeholder=lleft]").val());
+            let size = Number.parseFloat($("input[placeholder=size]").val());
+            let text = $("input[placeholder=text]").val();
+            let start_time = video.currentTime - 0.01; //Number.parseFloat($("input[placeholder=start_time]").val());
+            let end_time = video.currentTime + Number.parseFloat($("input[placeholder=duration]").val());
+
+            // action_label.style.stroke = "#F00";
+            action_label.style.fill="#F00";
+            action_label.style.lineType = "solid";
+            action_label.position.x = left;
+            action_label.position.y = top;
+            action_label.text = text;
+            action_label.style.border = {}
+
+            action_label.start_time = start_time;
+            action_label.end_time = end_time;
+
+            action_label = null;
+            edit_state = false;
+
+            $(".js-label-editor").hide();
+            $(".js-hint").show();
+        }
+
+
     }
 
     const cancel_temp_element = function() {
-        exit_edit_state();
+        if ($(".js-rect").prop("checked")) {
+            exit_edit_state("rect");
+        }
+        if ($(".js-arrowline").prop("checked")) {
+            exit_edit_state("arrawline");
+        }
+        if ($(".js-label").prop("checked")) {
+            exit_edit_state("label");
+        }
+
     }
 
-    const exit_edit_state = function() {
-        if (!action_rect)
-            return;
+    const exit_edit_state = function(type) {
+        if (type === "rect") {
+            if (!action_rect)
+                return;
 
-        action_rect.canMove(false);
-        g.children.remove(action_rect);
-        action_rect = null;
-        edit_state = false;
+            action_rect.canMove(false);
+            g.children.remove(action_rect);
+            action_rect = null;
+            edit_state = false;
 
-        $(".js-rect-editor").hide();
-        $(".js-hint").show();
+            $(".js-rect-editor").hide();
+            $(".js-hint").show();
+        }
+
+        if (type === "arraw") {
+            if (!action_arrawline)
+                return;
+
+            action_arrawline.canMove(false);
+            g.children.remove(action_arrawline);
+            action_arrawline = null;
+            edit_state = false;
+
+            $(".js-arrowline-editor").hide();
+            $(".js-hint").show();
+        }
+
+        if (type === "label") {
+            if (!action_label)
+                return;
+
+            action_label.canMove(false);
+            g.children.remove(action_label);
+            action_label = null;
+            edit_state = false;
+
+            $(".js-label-editor").hide();
+            $(".js-hint").show();
+        }
     }
 
     $(function() {
