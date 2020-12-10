@@ -9,6 +9,10 @@
 
     <link rel="stylesheet" href="skyblue.css">
     <link rel="stylesheet" href="demo/demo.css">
+    <link href="node_modules/video.js/dist/video-js.css" rel="stylesheet" />
+<style>
+
+</style>
 </head>
 <body>
 <div class="header">
@@ -17,60 +21,42 @@
         <a href="https://github.com/wangchengyu/video_in_canvas/archive/master.zip">Download</a>
     </div>
 </div>
-<div class="video-wrapper js-video-wrapper">
-    <div class="video-responsive" id="player">
-        <video class="video js-video" id="video-1" width="960" height="540" muted>
-            <source src="./LiSA.mp4" type=video/mp4>
-            <!-- <source src=http://techslides.com/demos/sample-videos/small.ogv type=video/ogg>
-            <source src=http://techslides.com/demos/sample-videos/small.mp4 type=video/mp4>
-            <source src=http://techslides.com/demos/sample-videos/small.3gp type=video/3gp> -->
-        </video>
+<div class="content">
+    <video  id="video-1" class="video-js"
+            controls
+            preload="auto"
+            width="800"
+            height="450"
+            data-setup="{}" muted>
+        <source src="./w.mp4" type=video/mp4>
+        <!-- <source src=http://techslides.com/demos/sample-videos/small.ogv type=video/ogg>
+        <source src=http://techslides.com/demos/sample-videos/small.mp4 type=video/mp4>
+        <source src=http://techslides.com/demos/sample-videos/small.3gp type=video/3gp> -->
+    </video>
 
-        <canvas class="canvas js-canvas"></canvas>
+
+</div><!--div id="canvas-container" class="graph">123</div-->
+<hr>
+<div class="content">
+    <div class="keyframebar" id="keyframebar" style="width: 100%;height:130px">
+    </div>
+</div>
+<div class="content">
+    <div class="elementbar1" id="elementbar1" style="width: 100%;height:30px;margin-bottom:5px">
+    </div>
+    <div class="elementbar2" id="elementbar2" style="width: 100%;height:30px">
     </div>
 </div>
 
 
-
 <div class="content">
-    <div class="row">
-        <div class="col md-8">
-            <div class="video-wrapper">
-                <div id="video-container"></div>
-                <div class="video-timeline js-timeline">
-                    <div class="video-timeline-passed js-timeline-passed">
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col md-4">
-            <div class="row">
-                <div class="col md-12">
-                    <a class="btn btn-success" onclick="video.play()">Play</a>
-                </div>
-                <div class="col md-12">
-                    <a class="btn btn-danger" onclick="video.pause()">Pause</a>
-                </div>
-                <div class="col md-12">
-                    <label>Video Current Time</label><input type="number" class="js-current" placeholder="currentTime" step="0.001"/>
-                </div>
-                <div class="col md-12">
-                    <label>Mouse Position</label>
-                    <span >top:
-                        <input type="number" class="js-mouse_top" ></span><br>
-                    <span >left:
-                        <input type="number" class="js-mouse_left" ></span>
 
-                </div>
-            </div>
-        </div>
-    </div>
 
     <div class="row">
 
     </div>
     <hr>
-    <div class="row">
+    <div class="row hide">
         <div class="col md-2">
             <label><input type="radio" name="element_type" class="js-rect" checked>rect</label>
         </div>
@@ -154,43 +140,57 @@
 <script src="js/jquery.min.js" ></script>
 <script src="js/canvas-video-player.js"></script>
 <script src="js/jmgraph.js"></script>
+<script src="node_modules/video.js/dist/video.js"></script>
+<script src="js/keyframe.js"> </script>
+<!--script src="node_modules/videojs-overlay/dist/videojs-overlay.js"></script-->
 
-<script>
-    var con = document.getElementById("video-container");
+<script >
 
-    // it will create a canvas under this div named "video-container"
-    var div_width = con.clientWidth;
-    var div_height = div_width * 540 / 960
+    var player = videojs('video-1');
+    var video = $("#video-1 video").get(0);
 
-    var g = jmGraph.create('video-container', {
-        width: div_width,  // this is the size of video
-        height: div_height,
+    // var con = document.getElementById("canvas-container");
+    //
+    // // it will create a canvas under this div named "video-container"
+    // var div_width = con.clientWidth;
+    // var div_height = con.clientHeight;
+
+    // var g = jmGraph.create('canvas-container', {
+    //     width: div_width,  // this is the size of video
+    //     height: div_height - 100,
+    // });
+
+    var g1 = jmGraph.create('keyframebar', {
+        width: $("#keyframebar").width(),  // this is the size of video
+        height: $("#keyframebar").height(),
     });
 
-    var canvasVideo = new CanvasVideoPlayer({
-    	videoSelector: '.js-video',
-    	canvasSelector: g.canvas,
-    	timelineSelector: '.video-timeline',
-    	audio: true
-    });
+    //var kf_ctx = g1.canvas.getContext("2d");
 
-    // this is the context for canvas
-    var canvas = g.canvas;
-    var ctx = canvas.getContext('2d');
-    // video dom
-    var video = document.getElementById("video-1");
+    //
+    // var e1 = jmGraph.create('elementbar1', {
+    //     width: $("#elementbar1").width(),  // this is the size of video
+    //     height: $("#elementbar1").height(),
+    // });
+    //
+    // var el1_ctx = e1.canvas.getContext("2d");
+    //
+    // var e2 = jmGraph.create('elementbar2', {
+    //     width: $("#elementbar2").width(),  // this is the size of video
+    //     height: $("#elementbar2").height(),
+    // });
+    //
+    // var el2_ctx = e2.canvas.getContext("2d");
 
-    var currentTime = $("input[placeholder=currentTime]");
 
-
-
+/*
     var action_rect = null;
     var action_arrawline = null;
     var action_label = null;
     var edit_state = false
 
     g.bind("mousedown", (event) => {
-        if ($(".js-rect").prop("checked") && action_rect == null && !edit_state) {
+        if (true && action_rect == null && !edit_state) {
 
             $(".js-rect-editor").show();
             $(".js-hint").hide();
@@ -216,6 +216,7 @@
 
             edit_state = true;
         }
+
 
         if ($(".js-arrawline").prop("checked")) {
 
@@ -254,8 +255,7 @@
                     stroke:"#ccc",
                     fill: "#ccc",
                     textAlign: 'left',
-                    fontFamily: "Arial",
-                    fontSize: 60,
+                    font: "48px Arial",
                     border: {
                         left:1,
                         top:1,
@@ -287,13 +287,13 @@
 
         return true;
     });
-
+    //
     g.bind("mousemove", (event) => {
 
         $(".js-mouse_top").val(event.position.y);
         $(".js-mouse_left").val(event.position.x);
 
-        if ($(".js-rect").prop("checked") && action_rect !== null && edit_state) {
+        if (true && action_rect !== null && edit_state) {
 
             if (event.event.buttons === 0)
                 return ;
@@ -339,7 +339,7 @@
 
             action_label.width = event.position.x - action_label.position.x;
             action_label.height = event.position.y - action_label.position.y;
-            action_label.style.fontSize = action_label.height -4; // TODO: has a bug
+            action_label.style.font = action_label.height - 4 + "px Arial"; // TODO: has a bug
 
             //update input
             $("input[placeholder=size]").val(action_label.style.fontSize);
@@ -352,7 +352,7 @@
 
     g.bind("mouseup", (event) => {
         //debugger;
-        if ($(".js-rect").prop("checked") && action_rect !== null && edit_state) {
+        if (true && action_rect !== null && edit_state) {
 
             if (action_rect.width < 2 && action_rect.height < 2) {
                 exit_edit_state("rect");
@@ -406,40 +406,122 @@
             return true;
         }
     });
+*/
 
+    /*
+    const MAX_KEY_FRAME = 20;
+
+    const VIDEO_WIDTH = 800;
+    const VIDEO_HEIGHT = 600;
+
+    const THUMB_WIDTH = 160;
+    const THUMB_HEIGHT = 100;
+    const THUMB_COUNT = 20;
+    const THUMB_SMALL_WIDTH = VIDEO_WIDTH / THUMB_COUNT;
+
+    const TIME_LABEL_HEIGHT = 30;
+    const TIME_LABEL_WIDTH = 40;
+
+    const INDEX_MARGIN_WIDTH = 2;
+
+    const CLIP_RATIO = 0.25;
+
+    var float_time_label = document.createElement("div");
+    document.body.appendChild(float_time_label);
+    float_time_label.style.display = "block";
+    float_time_label.style.position = "absolute";
+
+    var float_preview_div = document.createElement("div");
+    var float_preview_img = document.createElement("img");
+    document.body.appendChild(float_preview_div);
+    float_preview_div.style.cssText =
+        "display:block;" +
+        "position:absolute;" +
+        "width:160px;" +
+        "height:90px;" +
+        "border: #F00 solid 1px;";
+    float_preview_div.appendChild(float_preview_img);
+    float_preview_img.style.cssText = "width:100%;height:100%";
+
+
+    var mousemoveEvent = null;
+
+    document.getElementById("keyframebar").onmousemove = function(event) {
+        mousemoveEvent = event;
+    }
+
+    document.getElementById("keyframebar").onmousedown = function(event) {
+        video.currentTime = video.duration * event.layerX / VIDEO_WIDTH;
+    }
+    */
 
     window.update = function() {
 
-        if (g.children) {
-            g.children.each((i, item) => {
-                item.visible = video.currentTime > item.start_time && video.currentTime < item.end_time;
-            })
-        }
+        //draw cursor && draw time label
+        // if (mousemoveEvent && mousemoveEvent.layerX < VIDEO_WIDTH) {
 
-        if (video.paused) {
-            if (g.needUpdate) {
-                g.redraw();
-            }
-        } else {
-            currentTime.val(video.currentTime.toFixed(2));
+        //     timelabel_list.forEach(function(item, index) {
+        //         kf_ctx.fillText(item, index * 160, 0 + 20 + 3);
+        //     });
+        //
 
-            if (ctx) {
-                ctx.drawImage(video, 0,0, canvas.width, canvas.height);
+        //
+        //     // kf_ctx.drawImage(imgs_list[Math.floor(mousemoveEvent.layerX / 40)],
+        //     //     0, 0, VIDEO_WIDTH, VIDEO_HEIGHT,   //source
+        //     //     Math.floor(mousemoveEvent.layerX / 40) * THUMB_SMALL_WIDTH, TIME_LABEL_HEIGHT, THUMB_WIDTH, THUMB_HEIGHT); //dest
+        //
+        //     kf_ctx.beginPath();
+        //     kf_ctx.strokeStyle = "#F00";
+        //     kf_ctx.lineWidth = 2;
+        //     kf_ctx.moveTo(mousemoveEvent.layerX, 0);
+        //     kf_ctx.lineTo(mousemoveEvent.layerX + 3, 0);
+        //     kf_ctx.lineTo(mousemoveEvent.layerX, 3);
+        //     kf_ctx.lineTo(mousemoveEvent.layerX - 3, 0);
+        //     kf_ctx.lineTo(mousemoveEvent.layerX, 0);
+        //     kf_ctx.lineTo(mousemoveEvent.layerX, 130);
+        //     kf_ctx.stroke();
+        //
+        //     kf_ctx.fillStyle = "#000"
+        //     kf_ctx.fillText(timeformat(video.duration * (mousemoveEvent.layerX / VIDEO_WIDTH)), mousemoveEvent.layerX + 5, 10);
+        //     // float_time_label.innerText = timeformat(video.duration * (mousemoveEvent.layerX / VIDEO_WIDTH));
+        //     float_preview_div.style.top = (mousemoveEvent.pageY - mousemoveEvent.layerY - 90) + "px";
+        //     float_preview_div.style.left = (mousemoveEvent.pageX - 80)+ "px";
+        //     float_preview_img.setAttribute("src", imgs_list[Math.floor(mousemoveEvent.layerX / 40)].src);
+        //
+        //     mousemoveEvent = null;
+        // }
+        //
+        // // draw current time
+        // kf_ctx.beginPath();
+        // kf_ctx.strokeStyle = "#0F0";
+        // kf_ctx.lineWidth = 2;
+        // kf_ctx.rect(video.currentTime / video.duration * VIDEO_WIDTH - 1, TIME_LABEL_HEIGHT, 3, THUMB_HEIGHT);
+        // kf_ctx.stroke();
 
-                if (g.children) {
-                    g.children.each((i, item) => {
-                        if (item.visible)
-                            item.paint();
-                    })
-                }
-            }
-        }
+        // el1_ctx.fillStyle = "#000";
+        // el1_ctx.fillRect(0, 0, 160 * 5, 30);
+        // el1_ctx.fillStyle = "#FFF";
+        // el1_ctx.fillRect(0 +1, 0+1, 160 * 5-2, 30-2);
+        //
+        // el1_ctx.fillStyle = "#8F8";
+        // el1_ctx.fillRect(160*2+1, 0+1, 160-2, 30-2);
+        //
+        // el2_ctx.fillStyle = "#000";
+        // el2_ctx.fillRect(0, 0, 160 * 5, 30);
+        // el2_ctx.fillStyle = "#FFF";
+        // el2_ctx.fillRect(0 +1, 0+1, 160 * 5-2, 30-2);
+        //
+        // el2_ctx.fillStyle = "#8F8";
+        // el2_ctx.fillRect(160+1, 0+1, 160-2, 30-2);
+
 
 
 
         requestAnimationFrame(update);
     }
 
+
+    /*
     update();
 
     const add_new_element = function() {
@@ -576,28 +658,54 @@
             $(".js-hint").show();
         }
     }
+    */
+
+
 
     $(function() {
-        $(".js-current").change(function() {
-            video.currentTime = Number.parseFloat($(this).val());
-            currentTime.value = video.currentTime.toFixed(2);
-        });
 
-        video.ontimeupdate = () => {
-             if (video.paused)
-                 g.redraw();
-        }
+        var kf = new KeyFrame(g1.canvas, video);
 
-        // set fill the video under element
-        g.style = {fillStyle: function () {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        }};
 
-        video.currentTime = 0.01;
+        // animation loop
+        var raf_update = function() {
 
-        setTimeout(function() {
-            g.redraw();
-        }, 500);
+            if (kf.updated) {
+                kf.refreshBackground();
+                kf.fillAllTimeLabel();
+                kf.fillAllPreviewImages();
+                kf.drawTimeLine();
+                kf.drawFloatLine();
+                kf.setFloatPreviewPosition();
+            }
+            requestAnimationFrame(raf_update);
+        };
+
+        raf_update();
+
+
+
+
+        // $(".js-current").change(function() {
+        //     video.currentTime = Number.parseFloat($(this).val());
+        //     currentTime.value = video.currentTime.toFixed(2);
+        // });
+        //
+        // video.ontimeupdate = () => {
+        //      if (video.paused)
+        //          g.redraw();
+        // }
+        //
+        // // set fill the video under element
+        // g.style = {fillStyle: function () {
+        //     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        // }};
+        //
+        // video.currentTime = 0.01;
+        //
+        // setTimeout(function() {
+        //     g.redraw();
+        // }, 500);
     });
 
 </script>
