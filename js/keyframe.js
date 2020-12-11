@@ -33,6 +33,7 @@ class KeyFrame {
         this.canvas = canvas;
         this.video = video;
         this.ctx = this.canvas.getContext('2d');
+        canvas.style.cursor = 'col-resize';
 
         this.mouseMoveEvent = null;
         this.tl_list = []; // time label list "00:00.0 , 01:00.0 ..." just 6 labels in it.
@@ -62,13 +63,14 @@ class KeyFrame {
         document.body.appendChild(div);
         div.appendChild(img);
         div.style.cssText =
-            "display:block;" +
+            "display:none;" +
             "position:absolute;" +
             "width:160px;" +
             "height:90px;" +
-            "border: #F00 solid 1px;";
+            "border: #F00 solid 2px;" +
+            "border-radius: 5px;";
 
-        img.style.cssText = "width:100%;height:100%";
+        img.style.cssText = "width:100%;height:100%;border-radius: inherit;";
     }
 
     init_CoverDiv(div) {
@@ -120,24 +122,28 @@ class KeyFrame {
     }
 
     canvasMouseEnter() {
-        var that = this;
+        const that = this;
 
         return (event) => {
             that.showElement(that.float_preview_div);
             that.leaved = false;
+            that.updated = true;
         }
     }
 
     canvasMouseLeave() {
-        var that = this;
+        const that = this;
+
         return (event) => {
             that.hideElement(that.float_preview_div);
             that.leaved = true;
+            that.updated = true;
         }
     }
 
     canvasMouseMove() {
-        var that = this;
+        const that = this;
+
         return (event) => {
             that.mousemoveEvent = event;
             that.updated = true;

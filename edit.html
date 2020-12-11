@@ -146,24 +146,20 @@
 
 <script >
 
-    var player = videojs('video-1');
-    var video = $("#video-1 video").get(0);
+    const player = videojs('video-1');
+    const video = $("#video-1 video").get(0);
 
-    // var con = document.getElementById("canvas-container");
-    //
-    // // it will create a canvas under this div named "video-container"
-    // var div_width = con.clientWidth;
-    // var div_height = con.clientHeight;
-
-    // var g = jmGraph.create('canvas-container', {
-    //     width: div_width,  // this is the size of video
-    //     height: div_height - 100,
-    // });
-
-    var g1 = jmGraph.create('keyframebar', {
-        width: $("#keyframebar").width(),  // this is the size of video
+    const g1 = jmGraph.create('keyframebar', {
+        width: $("#keyframebar").width(),
         height: $("#keyframebar").height(),
     });
+
+    const kf_canvas = g1.canvas;
+    // var kf_container = document.getElementById("keyframebar");
+    // kf_container.appendChild(kf_canvas);
+    // kf_canvas.style.width = kf_container.clientWidth + "px";
+    // kf_canvas.style.height = kf_container.clientHeight + "px";
+
 
     //var kf_ctx = g1.canvas.getContext("2d");
 
@@ -408,95 +404,9 @@
     });
 */
 
-    /*
-    const MAX_KEY_FRAME = 20;
 
-    const VIDEO_WIDTH = 800;
-    const VIDEO_HEIGHT = 600;
-
-    const THUMB_WIDTH = 160;
-    const THUMB_HEIGHT = 100;
-    const THUMB_COUNT = 20;
-    const THUMB_SMALL_WIDTH = VIDEO_WIDTH / THUMB_COUNT;
-
-    const TIME_LABEL_HEIGHT = 30;
-    const TIME_LABEL_WIDTH = 40;
-
-    const INDEX_MARGIN_WIDTH = 2;
-
-    const CLIP_RATIO = 0.25;
-
-    var float_time_label = document.createElement("div");
-    document.body.appendChild(float_time_label);
-    float_time_label.style.display = "block";
-    float_time_label.style.position = "absolute";
-
-    var float_preview_div = document.createElement("div");
-    var float_preview_img = document.createElement("img");
-    document.body.appendChild(float_preview_div);
-    float_preview_div.style.cssText =
-        "display:block;" +
-        "position:absolute;" +
-        "width:160px;" +
-        "height:90px;" +
-        "border: #F00 solid 1px;";
-    float_preview_div.appendChild(float_preview_img);
-    float_preview_img.style.cssText = "width:100%;height:100%";
-
-
-    var mousemoveEvent = null;
-
-    document.getElementById("keyframebar").onmousemove = function(event) {
-        mousemoveEvent = event;
-    }
-
-    document.getElementById("keyframebar").onmousedown = function(event) {
-        video.currentTime = video.duration * event.layerX / VIDEO_WIDTH;
-    }
-    */
 
     window.update = function() {
-
-        //draw cursor && draw time label
-        // if (mousemoveEvent && mousemoveEvent.layerX < VIDEO_WIDTH) {
-
-        //     timelabel_list.forEach(function(item, index) {
-        //         kf_ctx.fillText(item, index * 160, 0 + 20 + 3);
-        //     });
-        //
-
-        //
-        //     // kf_ctx.drawImage(imgs_list[Math.floor(mousemoveEvent.layerX / 40)],
-        //     //     0, 0, VIDEO_WIDTH, VIDEO_HEIGHT,   //source
-        //     //     Math.floor(mousemoveEvent.layerX / 40) * THUMB_SMALL_WIDTH, TIME_LABEL_HEIGHT, THUMB_WIDTH, THUMB_HEIGHT); //dest
-        //
-        //     kf_ctx.beginPath();
-        //     kf_ctx.strokeStyle = "#F00";
-        //     kf_ctx.lineWidth = 2;
-        //     kf_ctx.moveTo(mousemoveEvent.layerX, 0);
-        //     kf_ctx.lineTo(mousemoveEvent.layerX + 3, 0);
-        //     kf_ctx.lineTo(mousemoveEvent.layerX, 3);
-        //     kf_ctx.lineTo(mousemoveEvent.layerX - 3, 0);
-        //     kf_ctx.lineTo(mousemoveEvent.layerX, 0);
-        //     kf_ctx.lineTo(mousemoveEvent.layerX, 130);
-        //     kf_ctx.stroke();
-        //
-        //     kf_ctx.fillStyle = "#000"
-        //     kf_ctx.fillText(timeformat(video.duration * (mousemoveEvent.layerX / VIDEO_WIDTH)), mousemoveEvent.layerX + 5, 10);
-        //     // float_time_label.innerText = timeformat(video.duration * (mousemoveEvent.layerX / VIDEO_WIDTH));
-        //     float_preview_div.style.top = (mousemoveEvent.pageY - mousemoveEvent.layerY - 90) + "px";
-        //     float_preview_div.style.left = (mousemoveEvent.pageX - 80)+ "px";
-        //     float_preview_img.setAttribute("src", imgs_list[Math.floor(mousemoveEvent.layerX / 40)].src);
-        //
-        //     mousemoveEvent = null;
-        // }
-        //
-        // // draw current time
-        // kf_ctx.beginPath();
-        // kf_ctx.strokeStyle = "#0F0";
-        // kf_ctx.lineWidth = 2;
-        // kf_ctx.rect(video.currentTime / video.duration * VIDEO_WIDTH - 1, TIME_LABEL_HEIGHT, 3, THUMB_HEIGHT);
-        // kf_ctx.stroke();
 
         // el1_ctx.fillStyle = "#000";
         // el1_ctx.fillRect(0, 0, 160 * 5, 30);
@@ -514,15 +424,11 @@
         // el2_ctx.fillStyle = "#8F8";
         // el2_ctx.fillRect(160+1, 0+1, 160-2, 30-2);
 
-
-
-
         requestAnimationFrame(update);
     }
 
 
     /*
-    update();
 
     const add_new_element = function() {
         if ($(".js-rect").prop("checked") && action_rect !== null && edit_state) {
@@ -660,15 +566,15 @@
     }
     */
 
-
-
     $(function() {
 
-        var kf = new KeyFrame(g1.canvas, video);
+        const kf = new KeyFrame(kf_canvas, video);
 
 
         // animation loop
-        var raf_update = function() {
+        const raf_update = function() {
+            if (!video.paused)
+                kf.updated = true;
 
             if (kf.updated) {
                 kf.refreshBackground();
@@ -677,35 +583,14 @@
                 kf.drawTimeLine();
                 kf.drawFloatLine();
                 kf.setFloatPreviewPosition();
+
+                kf.updated = false;
             }
             requestAnimationFrame(raf_update);
         };
 
         raf_update();
 
-
-
-
-        // $(".js-current").change(function() {
-        //     video.currentTime = Number.parseFloat($(this).val());
-        //     currentTime.value = video.currentTime.toFixed(2);
-        // });
-        //
-        // video.ontimeupdate = () => {
-        //      if (video.paused)
-        //          g.redraw();
-        // }
-        //
-        // // set fill the video under element
-        // g.style = {fillStyle: function () {
-        //     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        // }};
-        //
-        // video.currentTime = 0.01;
-        //
-        // setTimeout(function() {
-        //     g.redraw();
-        // }, 500);
     });
 
 </script>
