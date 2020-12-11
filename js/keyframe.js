@@ -74,7 +74,7 @@ class KeyFrame {
     }
 
     init_CoverDiv(div) {
-        video = this.video;
+        const video = this.video;
 
         video.parentNode.appendChild(div);
         div.innerHTML = "LOADING VIDEO ...";
