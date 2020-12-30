@@ -15,6 +15,13 @@
 </style>
 </head>
 <body>
+<div class="cover" >
+    <div class="paint-pad" id="paint-pad"></div>
+    <div class="button-div" >
+        <button class="btn btn-primary confirm-edit" >Confirm</button>
+        <button class="btn btn-light cancel-edit" >Cancel</button></div>
+
+</div>
 <div class="header">
     <div class="content">
         <a href="https://github.com/wangchengyu/video_in_canvas" class="padding-right-20">GitHub</a>
@@ -37,104 +44,32 @@
 
 </div><!--div id="canvas-container" class="graph">123</div-->
 <hr>
-<div class="content">
+<div class="content" style="margin-bottom: 5px; padding-bottom: 0px;">
     <div class="keyframebar" id="keyframebar" style="width: 100%;height:130px">
     </div>
 </div>
-<div class="content">
-    <div class="elementbar1" id="elementbar1" style="width: 100%;height:30px;margin-bottom:5px">
-    </div>
-    <div class="elementbar2" id="elementbar2" style="width: 100%;height:30px">
-    </div>
+<div class="content elementbars" id="elementbars">
 </div>
-
-
 <div class="content">
-
-
     <div class="row">
-
-    </div>
-    <hr>
-    <div class="row hide">
-        <div class="col md-2">
-            <label><input type="radio" name="element_type" class="js-rect" checked>rect</label>
-        </div>
-        <div class="col md-2">
-            <label><input type="radio" name="element_type" class="js-arrawline" >arrawline</label>
-        </div>
-        <div class="col md-2">
-            <label><input type="radio" name="element_type" class="js-label" >label</label>
+        <button class="btn btn-primary dropbtn" style="font-size: 30px; min-width: 30px; margin-right: 20px;" onclick="myFunction()">
+            +
+        </button>
+        <div id="myDropdown" class="dropdown-content">
+            <a href="#" id="el-rect" class="el-menu">Rect ☐</a>
+            <a href="#" id="el-arrows" class="el-menu">Arrows ⇨</a>
+            <a href="#" id="el-text" class="el-menu">Text</a>
         </div>
     </div>
 
-    <div class="row js-rect-editor" style="display:none;">
-        <div class="col md-2">
-            top: <input type="text" placeholder="top" value="100"/>
-        </div>
-        <div class="col md-2">
-            left: <input type="text"  placeholder="left" value="100"/>
-        </div>
-        <div class="col md-2">
-            width:<input type="text" placeholder="width" value="100"/>
-        </div>
-        <div class="col md-2">
-            height: <input type="text" placeholder="height" value="100"/>
-        </div>
-        <div class="col md-2">
-            duration: <input type="text" placeholder="duration" value="3"/>
-        </div>
-    </div>
-    <div class="row js-arrawline-editor" style="display:none;">
-        <div class="col md-2">
-            start x: <input type="text" placeholder="startx" value="100"/>
-        </div>
-        <div class="col md-2">
-            start y: <input type="text"  placeholder="starty" value="100"/>
-        </div>
-        <div class="col md-2">
-            end x:<input type="text" placeholder="endx" value="100"/>
-        </div>
-        <div class="col md-2">
-            end y: <input type="text" placeholder="endy" value="100"/>
-        </div>
-        <div class="col md-2">
-            duration: <input type="text" placeholder="duration" value="3"/>
-        </div>
-    </div>
-    <div class="row js-label-editor" style="display:none;">
-        <div class="col md-2">
-            top: <input type="text" placeholder="ltop" value="100"/>
-        </div>
-        <div class="col md-2">
-            left: <input type="text"  placeholder="lleft" value="100"/>
-        </div>
-        <div class="col md-2">
-            size:<input type="text" placeholder="size" value="24"/>
-        </div>
-        <div class="col md-2">
-            text: <input type="text" placeholder="text" value="demo text"/>
-        </div>
-        <div class="col md-2">
-            duration: <input type="text" placeholder="duration" value="3"/>
-        </div>
-    </div>
-
-    <div class="row js-rect-editor js-arrawline-editor js-label-editor" style="padding-top: 10px; padding-bottom: 10px; display:none">
-        <div class="col md-2">
-            <a class="btn btn-danger" onclick="add_new_element()">add </a>
-        </div>
-        <div class="col md-2">
-            <a class="btn btn-danger" onclick="cancel_temp_element()">cancel</a>
-        </div>
-    </div>
-    <div class="row js-hint">
-        Please <b>click</b> the progress bar to the appropriate time and <b>drag</b> as rect！
-    </div>
+</div>
+</div>
+<div class="content">
     <p class="margin-top-50">
         Released under MIT licence.
     </p>
 </div>
+
 
 
 <script src="js/jquery.min.js" ></script>
@@ -142,6 +77,7 @@
 <script src="js/jmgraph.js"></script>
 <script src="node_modules/video.js/dist/video.js"></script>
 <script src="js/keyframe.js"> </script>
+<script src="js/el-edit-event.js"></script>
 <!--script src="node_modules/videojs-overlay/dist/videojs-overlay.js"></script-->
 
 <script >
@@ -155,278 +91,6 @@
     });
 
     const kf_canvas = g1.canvas;
-    // var kf_container = document.getElementById("keyframebar");
-    // kf_container.appendChild(kf_canvas);
-    // kf_canvas.style.width = kf_container.clientWidth + "px";
-    // kf_canvas.style.height = kf_container.clientHeight + "px";
-
-
-    //var kf_ctx = g1.canvas.getContext("2d");
-
-    //
-    // var e1 = jmGraph.create('elementbar1', {
-    //     width: $("#elementbar1").width(),  // this is the size of video
-    //     height: $("#elementbar1").height(),
-    // });
-    //
-    // var el1_ctx = e1.canvas.getContext("2d");
-    //
-    // var e2 = jmGraph.create('elementbar2', {
-    //     width: $("#elementbar2").width(),  // this is the size of video
-    //     height: $("#elementbar2").height(),
-    // });
-    //
-    // var el2_ctx = e2.canvas.getContext("2d");
-
-
-/*
-    var action_rect = null;
-    var action_arrawline = null;
-    var action_label = null;
-    var edit_state = false
-
-    g.bind("mousedown", (event) => {
-        if (true && action_rect == null && !edit_state) {
-
-            $(".js-rect-editor").show();
-            $(".js-hint").hide();
-
-            //console.log(event);
-            action_rect = g.createShape("rect", {
-                style: {stroke:"#ccc", lineType:"dotted", lineWidth: 3},
-                position: {x: event.position.x, y: event.position.y},
-                width: 0,
-                height: 0,
-            })
-
-            action_rect.resizing = true;
-
-            g.children.add(action_rect); //temp rect
-
-            action_rect.start_time = video.currentTime - 0.001 //for show at this time point
-            action_rect.end_time = video.currentTime + 3
-
-            //update input
-            $("input[placeholder=top]").val(action_rect.position.y);
-            $("input[placeholder=left]").val(action_rect.position.x);
-
-            edit_state = true;
-        }
-
-
-        if ($(".js-arrawline").prop("checked")) {
-
-            $(".js-arrawline-editor").show();
-            $(".js-hint").hide();
-
-            //console.log(event);
-            action_arrawline = g.createShape("arrawline", {
-                style: {stroke:"#ccc", lineType:"dotted", lineWidth: 3, dashLength: 20},
-                start: {x: event.position.x, y: event.position.y},
-                end: {x: event.position.x, y: event.position.y}
-            })
-
-            action_arrawline.resizing = true;
-
-            g.children.add(action_arrawline); //temp rect
-
-            action_arrawline.start_time = video.currentTime - 0.001 //for show at this time point
-            action_arrawline.end_time = video.currentTime + 3
-
-            //update input
-            $("input[placeholder=startx]").val(action_arrawline.start.x);
-            $("input[placeholder=starty]").val(action_arrawline.start.y);
-
-            edit_state = true;
-        }
-
-        if ($(".js-label").prop("checked") && action_label == null && !edit_state) {
-
-            $(".js-label-editor").show();
-            $(".js-hint").hide();
-
-            //console.log(event);
-            action_label = g.createShape("label", {
-                style: {
-                    stroke:"#ccc",
-                    fill: "#ccc",
-                    textAlign: 'left',
-                    font: "48px Arial",
-                    border: {
-                        left:1,
-                        top:1,
-                        right:1,
-                        bottom:1,
-                        style: {
-                            stroke: 'red'
-                        }
-                    },
-                },
-                position: {x: event.position.x, y: event.position.y},
-                text: "demo text",
-
-            })
-
-            action_label.resizing = true;
-
-            g.children.add(action_label); //temp rect
-
-            action_label.start_time = video.currentTime - 0.001 //for show at this time point
-            action_label.end_time = video.currentTime + 3
-
-            //update input
-            $("input[placeholder=ltop]").val(action_label.position.y);
-            $("input[placeholder=lleft]").val(action_label.position.x);
-
-            edit_state = true;
-        }
-
-        return true;
-    });
-    //
-    g.bind("mousemove", (event) => {
-
-        $(".js-mouse_top").val(event.position.y);
-        $(".js-mouse_left").val(event.position.x);
-
-        if (true && action_rect !== null && edit_state) {
-
-            if (event.event.buttons === 0)
-                return ;
-
-            if (!action_rect.resizing)
-                return ;
-
-            action_rect.width = event.position.x - action_rect.position.x;
-            action_rect.height = event.position.y - action_rect.position.y;
-
-            //update input
-            $("input[placeholder=width]").val(action_rect.width);
-            $("input[placeholder=height]").val(action_rect.height);
-
-            return ;
-        }
-
-        if ($(".js-arrawline").prop("checked") && action_arrawline !== null && edit_state) {
-
-            if (event.event.buttons === 0)
-                return ;
-
-            if (!action_arrawline.resizing)
-                return ;
-
-            action_arrawline.end.x = event.position.x;
-            action_arrawline.end.y = event.position.y;
-
-            //update input
-            $("input[placeholder=endx]").val(action_arrawline.end.x);
-            $("input[placeholder=endy]").val(action_arrawline.end.y);
-
-            return true;
-        }
-
-        if ($(".js-label").prop("checked") && action_label !== null && edit_state) {
-
-            if (event.event.buttons === 0)
-                return ;
-
-            if (!action_label.resizing)
-                return ;
-
-            action_label.width = event.position.x - action_label.position.x;
-            action_label.height = event.position.y - action_label.position.y;
-            action_label.style.font = action_label.height - 4 + "px Arial"; // TODO: has a bug
-
-            //update input
-            $("input[placeholder=size]").val(action_label.style.fontSize);
-
-
-            return true;
-        }
-
-    });
-
-    g.bind("mouseup", (event) => {
-        //debugger;
-        if (true && action_rect !== null && edit_state) {
-
-            if (action_rect.width < 2 && action_rect.height < 2) {
-                exit_edit_state("rect");
-            }
-            action_rect.style.stroke = "#F00";
-            action_rect.canMove(true);
-            action_rect.bind("moveend", function() {
-                $("input[placeholder=top]").val(action_rect.position.y);
-                $("input[placeholder=left]").val(action_rect.position.x);
-            });
-            action_rect.resizing = false;
-
-            return true;
-        }
-
-        if ($(".js-arrawline").prop("checked") && action_arrawline !== null && edit_state) {
-            if (action_arrawline === null) {
-                return ;
-            }
-
-            if (action_arrawline.width < 2 && action_arrawline.height < 2) {
-                exit_edit_state("arrawline");
-            }
-            action_arrawline.style.stroke = "#F00";
-            action_arrawline.canMove(true);
-            action_arrawline.bind("moveend", function() {
-                $("input[placeholder=starty]").val(action_arrawline.start.y);
-                $("input[placeholder=startx]").val(action_arrawline.start.x);
-                $("input[placeholder=endy]").val(action_arrawline.end.y);
-                $("input[placeholder=endx]").val(action_arrawline.end.x);
-            });
-
-            action_arrawline.resizing = false;
-
-            return true;
-        }
-
-        if ($(".js-label").prop("checked") && action_label !== null && edit_state) {
-
-            if (action_label.width < 2 && action_label.height < 2) {
-                exit_edit_state("label");
-            }
-            // action_label.style.stroke = "#F00";
-            action_label.canMove(true);
-            action_label.bind("moveend", function() {
-                $("input[placeholder=ltop]").val(action_label.position.y);
-                $("input[placeholder=lleft]").val(action_label.position.x);
-            });
-            action_label.resizing = false;
-
-            return true;
-        }
-    });
-*/
-
-
-
-    window.update = function() {
-
-        // el1_ctx.fillStyle = "#000";
-        // el1_ctx.fillRect(0, 0, 160 * 5, 30);
-        // el1_ctx.fillStyle = "#FFF";
-        // el1_ctx.fillRect(0 +1, 0+1, 160 * 5-2, 30-2);
-        //
-        // el1_ctx.fillStyle = "#8F8";
-        // el1_ctx.fillRect(160*2+1, 0+1, 160-2, 30-2);
-        //
-        // el2_ctx.fillStyle = "#000";
-        // el2_ctx.fillRect(0, 0, 160 * 5, 30);
-        // el2_ctx.fillStyle = "#FFF";
-        // el2_ctx.fillRect(0 +1, 0+1, 160 * 5-2, 30-2);
-        //
-        // el2_ctx.fillStyle = "#8F8";
-        // el2_ctx.fillRect(160+1, 0+1, 160-2, 30-2);
-
-        requestAnimationFrame(update);
-    }
-
 
     /*
 
@@ -567,8 +231,61 @@
     */
 
     $(function() {
-
         const kf = new KeyFrame(kf_canvas, video);
+        const el_list = [];
+        const paint = jmGraph.create('paint-pad', {
+            width: 800,
+            height: 450,
+        });
+
+        const add_new_element = () => {
+            var rect = buildRectObject();
+            var el_id = "el_" + el_list.length;
+            var el_html = $("<div class='elementbar' id='" + el_id + "' data-index='"+el_list.length+"'></div>");
+            $(".elementbars").append(el_html);
+
+            var jm = jmGraph.create(el_id, {
+                width: $("#" + el_id).width(),  // this is the size of video
+                height: $("#" + el_id).height(),
+            });
+
+            el_list.push({
+                type: "rect",                       //type
+                object: rect,                       //shape obj
+                start_time: video.currentTime,      //start
+                end_time: video.currentTime + 3,    //end
+                dom: el_html,
+                jm: jm
+            });
+
+
+
+        };
+
+
+        $(".el-menu").click((event)=>{
+            const exit_edit_mode = (state) => {
+                $(".cover").hide();
+
+                if (state)
+                    add_new_element();
+            }
+            // go to edit mode
+            $(".cover").show();
+            let ctx = paint.canvas.getContext("2d");
+            ctx.drawImage(video, 0,0,800,450)
+            let body = document.getElementsByTagName("body")[0];
+            $(".cover").css("height", body.clientHeight);
+
+            $(".confirm-edit").click(jm_confirm);
+            $(".cancel-edit").click(jm_cancel);
+
+
+            setJmObject(paint, exit_edit_mode);
+
+
+
+        });
 
 
         // animation loop
@@ -586,6 +303,27 @@
 
                 kf.updated = false;
             }
+
+            if (el_list.length > 0) {
+
+                let el = el_list[0];
+                let canvas = el.jm.canvas;
+                let el_ctx = canvas.getContext('2d');
+
+                el_ctx.fillStyle = "#000";
+                el_ctx.fillRect(0, 0, VIDEO_WIDTH, 20 - 1);
+
+                el_ctx.fillStyle = "#FFF";
+                var leftpx = el.start_time / video.duration * VIDEO_WIDTH;
+                var rightpx = el.end_time / video.duration * VIDEO_WIDTH;
+
+                el_ctx.fillRect(leftpx, 0 + 1, rightpx, 20-2);
+                //
+                // el1_ctx.fillStyle = "#8F8";
+                // el1_ctx.fillRect(160*2+1, 0+1, 160-2, 30-2);
+            }
+
+
             requestAnimationFrame(raf_update);
         };
 
@@ -593,6 +331,23 @@
 
     });
 
+    /* When the user clicks on the button,
+toggle between hiding and showing the dropdown content */
+    function myFunction() {
+        document.getElementById("myDropdown").style.display = "inline";
+    }
+
+    // Close the dropdown menu if the user clicks outside of it
+    window.onclick = function(event) {
+        if (!event.target.matches('.dropbtn')) {
+            var dropdowns = document.getElementsByClassName("dropdown-content");
+            var i;
+            for (i = 0; i < dropdowns.length; i++) {
+                var openDropdown = dropdowns[i];
+                openDropdown.style.display = "none";
+            }
+        }
+    }
 </script>
 </body>
 </html>

@@ -2,7 +2,7 @@ const MAX_KEY_FRAME = 20;
 const CLIP_RATIO = 0.25;
 
 const VIDEO_WIDTH = 800;
-const VIDEO_HEIGHT = 600;
+const VIDEO_HEIGHT = 450;
 
 const THUMB_WIDTH = 160;
 const THUMB_HEIGHT = 100;
@@ -154,6 +154,7 @@ class KeyFrame {
         var that = this;
         return (event) => {
             that.video.currentTime = that.video.duration * event.layerX / VIDEO_WIDTH;
+            that.updated = true;
         }
     }
 
@@ -179,7 +180,7 @@ class KeyFrame {
             var i = 0;
             var time_update = function() {
                 if (i < MAX_KEY_FRAME) {
-                    tmp_canvas_ctx.drawImage(video,0,0, 800, 600);
+                    tmp_canvas_ctx.drawImage(video,0,0, VIDEO_WIDTH, VIDEO_HEIGHT);
                     imgs_list[i].setAttribute('src', tmp_canvas.toDataURL());
                     video.currentTime = time_point_list[i];
                     i++;
