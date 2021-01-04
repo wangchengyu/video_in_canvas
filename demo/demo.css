@@ -171,3 +171,50 @@ hr {
 	height:20px;
 	margin-bottom:2px;
 }
+
+.elementbar input[type=checkbox] {
+	display: inline;
+	position: absolute;
+	left: -15px;
+	top: 8px;
+	width: 16px;
+	height: 16px
+}
+
+.elementbar .el-trash {
+	display: inline;
+	position: absolute;
+	left: 815px;
+	width: 16px;
+	height: 16px
+}
+
+.el-trash:hover {
+	color: #F00;
+}
+
+.el-trash:active {
+	left: 817px;
+	top:12px;
+}
+
+.el-trash {
+	color: #F00;
+}
+
+.elementbar .el-edit {
+	display: inline;
+	position: absolute;
+	left: 840px;
+	width: 16px;
+	height: 16px
+}
+
+.el-edit:hover {
+	color: #F00;
+}
+
+.el-edit:active {
+	left: 842px;
+	top:12px;
+}

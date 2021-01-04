@@ -5,11 +5,21 @@ var confirmed = false;
 var resizeCursor = "";
 var exit_callback = null;
 var update_loop = false;
+var v = null;
 
-const setJmObject = function (g, ec) {
+var el_state = {
+    left: false,
+    right: false,
+    move: false,
+}
+
+const setJmObject = function (g, video, ec) {
     jm = g;
     exit_callback = ec;
     confirmed = false;
+    v = video;
+
+    let ctx = jm.canvas.getContext('2d');
 
     var style = {
         stroke: 'red',
@@ -40,11 +50,9 @@ const setJmObject = function (g, ec) {
     });
 
     resizeRect.on('inrect', function(r) {
-        console.log("inrect")
         resizeCursor = r.cursor;
     });
     resizeRect.on('outrect', function() {
-        console.log("outrect");
         resizeCursor = "";
     });
 
@@ -54,6 +62,11 @@ const setJmObject = function (g, ec) {
     jm.bind("mousemove", jm_mousemove);
     jm.bind("mouseup", jm_mouseup);
     jm.bind("mousedown", jm_mousedown);
+    jm.style = {
+        fillStyle : () => {
+            ctx.drawImage(v, 0, 0, jm.canvas.width, jm.canvas.height);
+        }
+    }
 
 
     update_loop = true;
@@ -193,11 +206,34 @@ const unbind_jm_event = () => {
     jm.unbind("mouseup", jm_mouseup_end_move);
 }
 
-const g_paint = () => {
+const el_mousedown = (e) => {
+    var left = e.target.el.left;
+    var right = e.target.el.right;
+    //left edge justify
 
+    if (e.layerX < left - 1 && e.layerX > left + 1)
+        console.log("left justify");
+    //right edge justfy
+
+    //move el
+}
+
+const el_mousemove = (e) => {
+
+
+}
+
+const el_mouseup = (e) => {
+
+
+}
+
+const g_paint = () => {
     // set a start/stop flag
-    if (jm.needUpdate)
+    if (jm.needUpdate) {
         jm.redraw();
+    }
+
 
     setTimeout(() => {
         if (update_loop)

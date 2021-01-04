@@ -44,7 +44,7 @@
 
 </div><!--div id="canvas-container" class="graph">123</div-->
 <hr>
-<div class="content" style="margin-bottom: 5px; padding-bottom: 0px;">
+<div class="content" style="margin-bottom: 5px; padding-bottom: 0;">
     <div class="keyframebar" id="keyframebar" style="width: 100%;height:130px">
     </div>
 </div>
@@ -63,7 +63,7 @@
     </div>
 
 </div>
-</div>
+
 <div class="content">
     <p class="margin-top-50">
         Released under MIT licence.
@@ -241,10 +241,14 @@
         const add_new_element = () => {
             var rect = buildRectObject();
             var el_id = "el_" + el_list.length;
-            var el_html = $("<div class='elementbar' id='" + el_id + "' data-index='"+el_list.length+"'></div>");
+            var el_html = $("<div class='elementbar' id='" + el_id + "' data-index='"+el_list.length+"'>" +
+                "<input type='checkbox' alt='Visible or not' checked>" +
+                "<span class='icon-trash el-trash' title='delete'></span>" +
+                "<span class='icon-edit el-edit' title='edit'></span>" +
+                "</div>");
             $(".elementbars").append(el_html);
 
-            var jm = jmGraph.create(el_id, {
+            var el_jm = jmGraph.create(el_id, {
                 width: $("#" + el_id).width(),  // this is the size of video
                 height: $("#" + el_id).height(),
             });
@@ -254,11 +258,18 @@
                 object: rect,                       //shape obj
                 start_time: video.currentTime,      //start
                 end_time: video.currentTime + 3,    //end
+                left: video.currentTime / video.duration * (VIDEO_WIDTH - 2),
+                right: (video.currentTime + 3) / video.duration * (VIDEO_WIDTH -2),
                 dom: el_html,
-                jm: jm
+                jm: el_jm,
+                updated: true
             });
 
+            el_jm.canvas.el = el_list[el_list.length];
 
+            el_jm.canvas.addEventListener("mousemove", el_mousemove);
+            el_jm.canvas.addEventListener("mouseup", el_mouseup);
+            el_jm.canvas.addEventListener("mousedown", el_mousedown);
 
         };
 
@@ -281,8 +292,7 @@
             $(".cancel-edit").click(jm_cancel);
 
 
-            setJmObject(paint, exit_edit_mode);
-
+            setJmObject(paint, video, exit_edit_mode);
 
 
         });
@@ -305,22 +315,29 @@
             }
 
             if (el_list.length > 0) {
+                for (var i = 0; i < el_list.length; i++) {
+                    let el = el_list[i];
 
-                let el = el_list[0];
-                let canvas = el.jm.canvas;
-                let el_ctx = canvas.getContext('2d');
+                    if (!el.updated)
+                        continue;
 
-                el_ctx.fillStyle = "#000";
-                el_ctx.fillRect(0, 0, VIDEO_WIDTH, 20 - 1);
+                    let canvas = el.jm.canvas;
+                    let el_ctx = canvas.getContext('2d');
 
-                el_ctx.fillStyle = "#FFF";
-                var leftpx = el.start_time / video.duration * VIDEO_WIDTH;
-                var rightpx = el.end_time / video.duration * VIDEO_WIDTH;
+                    el_ctx.beginPath();
+                    el_ctx.fillStyle = "#000";
+                    el_ctx.fillRect(0, 0, VIDEO_WIDTH, 20);
+                    el_ctx.fillStyle = "#FFF";
+                    el_ctx.fillRect(1, 1, VIDEO_WIDTH - 2 , 20 - 2);
 
-                el_ctx.fillRect(leftpx, 0 + 1, rightpx, 20-2);
-                //
-                // el1_ctx.fillStyle = "#8F8";
-                // el1_ctx.fillRect(160*2+1, 0+1, 160-2, 30-2);
+                    el_ctx.fillStyle = "#8F8";
+                    let leftpx = el.start_time / video.duration * (VIDEO_WIDTH - 2);
+                    let width = (el.end_time - el.start_time) / video.duration * (VIDEO_WIDTH - 2);
+                    el_ctx.fillRect(leftpx + 1, 1, width, 20 - 2);
+                    el_ctx.stroke();
+
+                    kf.drawFloatLine(el_ctx, true);
+                }
             }
 
 

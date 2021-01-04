@@ -265,8 +265,10 @@ class KeyFrame {
 
     }
 
-    drawFloatLine(ctx) {
+    drawFloatLine(ctx, just_line) {
         ctx = ctx || this.ctx;
+        just_line = !!just_line;
+
         var event = this.mousemoveEvent;
 
         if (event && event.layerX > VIDEO_WIDTH)
@@ -276,18 +278,26 @@ class KeyFrame {
             return;
 
         ctx.beginPath();
+
         ctx.strokeStyle = "#F00";
         ctx.lineWidth = 2;
         ctx.moveTo(event.layerX, 0);
-        ctx.lineTo(event.layerX + 3, 0);
-        ctx.lineTo(event.layerX, 3);
-        ctx.lineTo(event.layerX - 3, 0);
-        ctx.lineTo(event.layerX, 0);
-        ctx.lineTo(event.layerX, 130);
+
+        if (!just_line) {
+            ctx.lineTo(event.layerX + 3, 0);
+            ctx.lineTo(event.layerX, 3);
+            ctx.lineTo(event.layerX - 3, 0);
+            ctx.lineTo(event.layerX, 0);
+        }
+
+        ctx.lineTo(event.layerX, ctx.canvas.height);
         ctx.stroke();
 
-        ctx.fillStyle = "#000"
-        ctx.fillText(timeformat(this.video.duration * (event.layerX / VIDEO_WIDTH)), event.layerX + 5, 10);
+        if (!just_line) {
+            ctx.fillStyle = "#000"
+            ctx.fillText(timeformat(this.video.duration * (event.layerX / VIDEO_WIDTH)), event.layerX + 5, 10);
+        }
+
     }
 
     drawTimeLine(ctx, video) {
