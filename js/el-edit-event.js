@@ -4,7 +4,7 @@ var resizeRect = null;
 var confirmed = false;
 var resizeCursor = "";
 var exit_callback = null;
-var update_loop = false;
+var repaint_loop = false;
 var v = null;
 
 var el_state = {
@@ -19,10 +19,16 @@ const setJmObject = function (g, video, ec) {
     confirmed = false;
     v = video;
 
-    let ctx = jm.canvas.getContext('2d');
+    let ctx = jm.canvas.getContext("2d");
+
+    jm.style = {
+        fillStyle : () => {
+            ctx.drawImage(v, 0, 0, jm.canvas.width, jm.canvas.height);
+        }
+    }
 
     var style = {
-        stroke: 'red',
+        stroke: 'red', //TODO: just rect use red
         lineWidth: 3, //边线宽
         //小方块样式
         rectStyle: {
@@ -58,19 +64,20 @@ const setJmObject = function (g, video, ec) {
 
 
     jm.children.add(resizeRect);
+}
+
+const initEditMode = (type) => {
 
     jm.bind("mousemove", jm_mousemove);
     jm.bind("mouseup", jm_mouseup);
     jm.bind("mousedown", jm_mousedown);
-    jm.style = {
-        fillStyle : () => {
-            ctx.drawImage(v, 0, 0, jm.canvas.width, jm.canvas.height);
-        }
-    }
 
 
-    update_loop = true;
+    resizeRect.visible = false;
+    repaint_loop = true;
+
     g_paint();
+
 }
 
 const jm_mousedown = (e) => {
@@ -174,7 +181,7 @@ const buildRectObject = () => {
 const jm_confirm = () => {
     unbind_jm_event();
     resizeRect.visible = false;
-    update_loop = false;
+    repaint_loop = false;
     exit_callback(true);
 
     // {
@@ -192,7 +199,7 @@ const jm_cancel = () => {
     // unbind event
     unbind_jm_event();
     resizeRect.visible = false;
-    update_loop = false;
+    repaint_loop = false;
     exit_callback(false);
 }
 
@@ -297,7 +304,7 @@ const g_paint = () => {
 
 
     setTimeout(() => {
-        if (update_loop)
+        if (repaint_loop)
             g_paint();
     }, 50)
 

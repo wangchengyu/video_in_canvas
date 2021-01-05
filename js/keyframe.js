@@ -190,6 +190,8 @@ class KeyFrame {
                     video.onloadeddata = null;
                     div.style.display = "none";
                     that.updated = true;
+
+                    //initPlayer();
                 }
             }
 

@@ -92,147 +92,28 @@
 
     const kf_canvas = g1.canvas;
 
-    /*
 
-    const add_new_element = function() {
-        if ($(".js-rect").prop("checked") && action_rect !== null && edit_state) {
+    let c = null;
+    let player1 = null;
 
-            let top = Number.parseFloat($("input[placeholder=top]").val());
-            let left = Number.parseFloat($("input[placeholder=left]").val());
-            let width = Number.parseFloat($("input[placeholder=width]").val());
-            let height = Number.parseFloat($("input[placeholder=height]").val());
-            let start_time = video.currentTime - 0.01; //Number.parseFloat($("input[placeholder=start_time]").val());
-            let end_time = video.currentTime + Number.parseFloat($("input[placeholder=duration]").val());
+    const initPlayer = () => {
+        $(player.el_.children[0]).addClass('vjs-hidden');
+        $(".vjs-text-track-display").get(0).id = "vjs-text-track-display";
 
-            action_rect.style.stroke = "#F00";
-            action_rect.style.lineType = "solid";
-            action_rect.position.x = left;
-            action_rect.position.y = top;
-            action_rect.width = width;
-            action_rect.height = height;
-            action_rect.start_time = start_time;
-            action_rect.end_time = end_time;
+        player1 = jmGraph.create('vjs-text-track-display', {
+            width: $("#vjs-text-track-display").width(),
+            height: $("#vjs-text-track-display").height(),
+        });
 
-            action_rect = null;
-            edit_state = false;
-
-            $(".js-rect-editor").hide();
-            $(".js-hint").show();
-        }
-
-        if ($(".js-arrawline").prop("checked") && action_arrawline !== null && edit_state) {
-
-            let startx = Number.parseFloat($("input[placeholder=startx]").val());
-            let starty = Number.parseFloat($("input[placeholder=starty]").val());
-            let endx = Number.parseFloat($("input[placeholder=endx]").val());
-            let endy = Number.parseFloat($("input[placeholder=endy]").val());
-            let start_time = video.currentTime - 0.01; //Number.parseFloat($("input[placeholder=start_time]").val());
-            let end_time = video.currentTime + Number.parseFloat($("input[placeholder=duration]").val());
-
-            action_arrawline.style.stroke = "#F00";
-            action_arrawline.style.lineType = "solid";
-            action_arrawline.start.x = startx;
-            action_arrawline.start.y = starty;
-            action_arrawline.end.x = endx;
-            action_arrawline.end.y = endy;
-            action_arrawline.start_time = start_time;
-            action_arrawline.end_time = end_time;
-
-            action_arrawline = null;
-            edit_state = false;
-
-            $(".js-arrawline-editor").hide();
-            $(".js-hint").show();
-        }
-
-        if ($(".js-label").prop("checked") && action_label !== null && edit_state) {
-
-            let top = Number.parseFloat($("input[placeholder=ltop]").val());
-            let left = Number.parseFloat($("input[placeholder=lleft]").val());
-            let size = Number.parseFloat($("input[placeholder=size]").val());
-            let text = $("input[placeholder=text]").val();
-            let start_time = video.currentTime - 0.01; //Number.parseFloat($("input[placeholder=start_time]").val());
-            let end_time = video.currentTime + Number.parseFloat($("input[placeholder=duration]").val());
-
-            // action_label.style.stroke = "#F00";
-            action_label.style.fill="#F00";
-            action_label.style.lineType = "solid";
-            action_label.position.x = left;
-            action_label.position.y = top;
-            action_label.text = text;
-            action_label.style.border = {}
-
-            action_label.start_time = start_time;
-            action_label.end_time = end_time;
-
-            action_label = null;
-            edit_state = false;
-
-            $(".js-label-editor").hide();
-            $(".js-hint").show();
-        }
-
+        c = player.canvas.getContext("2d");
 
     }
-
-    const cancel_temp_element = function() {
-        if ($(".js-rect").prop("checked")) {
-            exit_edit_state("rect");
-        }
-        if ($(".js-arrowline").prop("checked")) {
-            exit_edit_state("arrawline");
-        }
-        if ($(".js-label").prop("checked")) {
-            exit_edit_state("label");
-        }
-
-    }
-
-    const exit_edit_state = function(type) {
-        if (type === "rect") {
-            if (!action_rect)
-                return;
-
-            action_rect.canMove(false);
-            g.children.remove(action_rect);
-            action_rect = null;
-            edit_state = false;
-
-            $(".js-rect-editor").hide();
-            $(".js-hint").show();
-        }
-
-        if (type === "arraw") {
-            if (!action_arrawline)
-                return;
-
-            action_arrawline.canMove(false);
-            g.children.remove(action_arrawline);
-            action_arrawline = null;
-            edit_state = false;
-
-            $(".js-arrowline-editor").hide();
-            $(".js-hint").show();
-        }
-
-        if (type === "label") {
-            if (!action_label)
-                return;
-
-            action_label.canMove(false);
-            g.children.remove(action_label);
-            action_label = null;
-            edit_state = false;
-
-            $(".js-label-editor").hide();
-            $(".js-hint").show();
-        }
-    }
-    */
 
     $(function() {
+
         const kf = new KeyFrame(kf_canvas, video);
         const el_list = [];
+
         const paint = jmGraph.create('paint-pad', {
             width: 800,
             height: 450,
@@ -262,8 +143,10 @@
                 right: (video.currentTime + 3) / video.duration * (VIDEO_WIDTH -2),
                 dom: el_html,
                 jm: el_jm,
-                updated: true
+                updated: true //TODO: no modi, no update
             });
+
+            player1.children.add(rect);
 
             el_jm.canvas.el = el_list[el_list.length - 1];
 
@@ -273,8 +156,7 @@
 
         };
 
-        let ctx = paint.canvas.getContext("2d");
-        ctx.drawImage(video, 0,0,800,450);
+
 
         const exit_edit_mode = (state) => {
             $(".cover").hide();
@@ -290,15 +172,21 @@
 
         $(".el-menu").click((event)=>{
             // go to edit mode
-            $(".cover").show();
-
             let body = document.getElementsByTagName("body")[0];
-            $(".cover").css("height", body.clientHeight);
+            $(".cover")
+                .css("height", body.clientHeight)
+                .show();
+
+            initEditMode("rect");
         });
 
 
         // animation loop
         const raf_update = function() {
+
+            if (c)
+                c.drawImage(video, 0,0, VIDEO_WIDTH, VIDEO_HEIGHT);
+
             if (!video.paused)
                 kf.updated = true;
 
