@@ -191,7 +191,7 @@ class KeyFrame {
                     div.style.display = "none";
                     that.updated = true;
 
-                    //initPlayer();
+                    initPlayer();
                 }
             }
 

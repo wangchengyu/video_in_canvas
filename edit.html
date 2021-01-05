@@ -98,15 +98,25 @@
 
     const initPlayer = () => {
         $(player.el_.children[0]).addClass('vjs-hidden');
-        $(".vjs-text-track-display").get(0).id = "vjs-text-track-display";
+        var container = $(".vjs-text-track-display").get(0);
+        container.id = "vjs-text-track-display";
+        container.style.bottom = 0;
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
+        }
 
         player1 = jmGraph.create('vjs-text-track-display', {
             width: $("#vjs-text-track-display").width(),
             height: $("#vjs-text-track-display").height(),
         });
 
-        c = player.canvas.getContext("2d");
+        c = player1.canvas.getContext("2d");
 
+        player1.style = {
+            fillStyle : () => {
+                c.drawImage(video, 0, 0, player1.canvas.width, player1.canvas.height);
+            }
+        }
     }
 
     $(function() {
@@ -146,8 +156,9 @@
                 updated: true //TODO: no modi, no update
             });
 
-            //player1.children.add(rect);
+            player1.children.add(rect);
 
+            rect.el = el_list[el_list.length - 1];
             el_jm.canvas.el = el_list[el_list.length - 1];
 
             el_jm.canvas.addEventListener("mousemove", el_mousemove);
@@ -180,11 +191,17 @@
         });
 
 
+
         // animation loop
         const raf_update = function() {
+            if (player1 && player1.children && player1.children.length) {
+                player1.children.each((i, item) => {
+                    item.visible = video.currentTime > item.el.start_time && video.currentTime < item.el.end_time;
+                })
+            }
 
-            if (c)
-                c.drawImage(video, 0,0, VIDEO_WIDTH, VIDEO_HEIGHT);
+            if (player1 && (!video.paused ||player1.needUpdate))
+                player1.redraw();
 
             if (!video.paused)
                 kf.updated = true;
