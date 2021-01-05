@@ -1,11 +1,21 @@
 
+// paint pad object
 var jm = null;
+
+// resize element object
 var resizeRect = null;
-var confirmed = false;
+
+// resize element object cursor string
 var resizeCursor = "";
+// confirm flag
+var confirmed = false;
+
+
 var exit_callback = null;
 var repaint_loop = false;
 var v = null;
+
+var offset_100ms = 0;
 
 var el_state = {
     left: false,
@@ -18,6 +28,8 @@ const setJmObject = function (g, video, ec) {
     exit_callback = ec;
     confirmed = false;
     v = video;
+
+    offset_100ms = Math.floor((0.1/v.duration) * VIDEO_WIDTH);
 
     let ctx = jm.canvas.getContext("2d");
 
@@ -253,23 +265,48 @@ const el_mousemove = (e) => {
     else
         switch (el.state) {
             case "left": {
-                el.left = e.layerX;
+
+                if (e.layerX <= 0)
+                    el.left = 0;
+                else if (e.layerX > el.right - offset_100ms)
+                    el.left = el.right - offset_100ms;
+                else
+                    el.left = e.layerX;
+
+                el.start_time = (el.left / VIDEO_WIDTH) * video.duration;
 
                 break;
             }
 
             case "right": {
-                el.right = e.layerX;
+                if (el.right >= VIDEO_WIDTH)
+                    el.right = VIDEO_WIDTH;
+                else if (el.right < el.left + offset_100ms)
+                    el.right = el.left + offset_100ms;
+                else
+                    el.right = e.layerX;
+
+                el.end_time = (el.right / VIDEO_HEIGHT) * video.duration;
 
                 break;
             }
 
             case "move": {
 
+
                 let offset = e.layerX - el.move_start;
+
+                if (el.left + offset <= 0)
+                    break;
+
+                if (el.right + offset >= VIDEO_WIDTH)
+                    break;
 
                 el.left += offset;
                 el.right += offset;
+
+                el.start_time = (el.left / VIDEO_WIDTH) * video.duration;
+                el.end_time = (el.right / VIDEO_HEIGHT) * video.duration;
 
                 el.move_start = e.layerX;
 
