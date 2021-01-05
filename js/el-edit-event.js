@@ -163,7 +163,7 @@ const jm_mouseup_end_move = (e) => {
 }
 
 const buildRectObject = () => {
-    return jm.createShape("resize", {
+    return jm.createShape("rect", {
         style: {stroke: 'red', lineWidth: 3},
         position: {x: resizeRect.position.x, y: resizeRect.position.y},
         width: resizeRect.width,
@@ -207,26 +207,87 @@ const unbind_jm_event = () => {
 }
 
 const el_mousedown = (e) => {
-    var left = e.target.el.left;
-    var right = e.target.el.right;
-    //left edge justify
 
-    if (e.layerX < left - 1 && e.layerX > left + 1)
-        console.log("left justify");
-    //right edge justfy
+    let target = e.target;
+    let el = target.el;
 
-    //move el
+    el.buttondown = true;
+
+    if (el.state == "move") {
+        el.move_start = e.layerX;
+    }
+
 }
 
 const el_mousemove = (e) => {
 
+    let target = e.target;
+    let el = target.el;
 
-}
+    let left = el.left;
+    let right = el.right;
+
+    if (!el.buttondown && e.buttons == 0)
+
+        if (e.layerX > left - 2 && e.layerX < left + 2) {
+            el.state = "left";
+            target.style.cursor = "ew-resize";
+        } else if (e.layerX > right - 2 && e.layerX < right + 2) {
+            el.state = "right";
+            target.style.cursor = "ew-resize";
+        } else if (e.layerX > left + 3 && e.layerX < right - 3) {
+            el.state = "move";
+            target.style.cursor = "move";
+        } else {
+            el.state = "";
+            target.style.cursor = "default";
+        }
+
+    else
+        switch (el.state) {
+            case "left": {
+                el.left = e.layerX;
+
+                break;
+            }
+
+            case "right": {
+                el.right = e.layerX;
+
+                break;
+            }
+
+            case "move": {
+
+                let offset = e.layerX - el.move_start;
+
+                el.left += offset;
+                el.right += offset;
+
+                el.move_start = e.layerX;
+
+
+                break;
+            }
+
+            default: {
+
+            }
+        }
+
+
+
+
+
+};
 
 const el_mouseup = (e) => {
+    let target = e.target;
+    let el = target.el;
 
+    el.buttondown = false;
 
-}
+};
 
 const g_paint = () => {
     // set a start/stop flag
@@ -240,7 +301,7 @@ const g_paint = () => {
             g_paint();
     }, 50)
 
-}
+};
 
 /*
     var action_rect = null;

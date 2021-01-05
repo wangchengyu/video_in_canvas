@@ -239,10 +239,10 @@
         });
 
         const add_new_element = () => {
-            var rect = buildRectObject();
-            var el_id = "el_" + el_list.length;
-            var el_html = $("<div class='elementbar' id='" + el_id + "' data-index='"+el_list.length+"'>" +
-                "<input type='checkbox' alt='Visible or not' checked>" +
+            let rect = buildRectObject();
+            let el_id = "el_" + el_list.length;
+            let el_html = $("<div class='elementbar' id='" + el_id + "' data-index='"+el_list.length+"'>" +
+                "<input type='checkbox' class='el_checkbox' alt='Visible or not' checked />" +
                 "<span class='icon-trash el-trash' title='delete'></span>" +
                 "<span class='icon-edit el-edit' title='edit'></span>" +
                 "</div>");
@@ -265,7 +265,7 @@
                 updated: true
             });
 
-            el_jm.canvas.el = el_list[el_list.length];
+            el_jm.canvas.el = el_list[el_list.length - 1];
 
             el_jm.canvas.addEventListener("mousemove", el_mousemove);
             el_jm.canvas.addEventListener("mouseup", el_mouseup);
@@ -273,28 +273,27 @@
 
         };
 
+        let ctx = paint.canvas.getContext("2d");
+        ctx.drawImage(video, 0,0,800,450);
+
+        const exit_edit_mode = (state) => {
+            $(".cover").hide();
+
+            if (state)
+                add_new_element();
+        }
+
+        $(".confirm-edit").click(jm_confirm);
+        $(".cancel-edit").click(jm_cancel);
+
+        setJmObject(paint, video, exit_edit_mode);
 
         $(".el-menu").click((event)=>{
-            const exit_edit_mode = (state) => {
-                $(".cover").hide();
-
-                if (state)
-                    add_new_element();
-            }
             // go to edit mode
             $(".cover").show();
-            let ctx = paint.canvas.getContext("2d");
-            ctx.drawImage(video, 0,0,800,450)
+
             let body = document.getElementsByTagName("body")[0];
             $(".cover").css("height", body.clientHeight);
-
-            $(".confirm-edit").click(jm_confirm);
-            $(".cancel-edit").click(jm_cancel);
-
-
-            setJmObject(paint, video, exit_edit_mode);
-
-
         });
 
 
@@ -331,9 +330,8 @@
                     el_ctx.fillRect(1, 1, VIDEO_WIDTH - 2 , 20 - 2);
 
                     el_ctx.fillStyle = "#8F8";
-                    let leftpx = el.start_time / video.duration * (VIDEO_WIDTH - 2);
-                    let width = (el.end_time - el.start_time) / video.duration * (VIDEO_WIDTH - 2);
-                    el_ctx.fillRect(leftpx + 1, 1, width, 20 - 2);
+
+                    el_ctx.fillRect(el.left + 1, 1, (el.right - el.left), 20 - 2);
                     el_ctx.stroke();
 
                     kf.drawFloatLine(el_ctx, true);

@@ -168,11 +168,12 @@ hr {
 }
 
 .elementbar {
+	width: 800px;
 	height:20px;
 	margin-bottom:2px;
 }
 
-.elementbar input[type=checkbox] {
+.el_checkbox {
 	display: inline;
 	position: absolute;
 	left: -15px;
@@ -181,7 +182,7 @@ hr {
 	height: 16px
 }
 
-.elementbar .el-trash {
+.el-trash {
 	display: inline;
 	position: absolute;
 	left: 815px;
@@ -202,7 +203,7 @@ hr {
 	color: #F00;
 }
 
-.elementbar .el-edit {
+.el-edit {
 	display: inline;
 	position: absolute;
 	left: 840px;
