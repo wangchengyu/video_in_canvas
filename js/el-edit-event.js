@@ -156,7 +156,6 @@ const jm_mousemove_move_rect = (e) => {
     if (resizeCursor)
         jm.canvas.style.cursor = resizeCursor;
 
-
     if (resizeRect.old_position) {
         resizeRect.position.x += e.position.x - resizeRect.old_position.x;
         resizeRect.position.y += e.position.y - resizeRect.old_position.y;
@@ -180,7 +179,6 @@ const jm_mouseup = (e) => {
 
 const jm_mouseup_end_move = (e) => {
     resizeRect.old_position = "";
-
 }
 
 const buildRectObject = () => {
@@ -317,11 +315,6 @@ const el_mousemove = (e) => {
 
             }
         }
-
-
-
-
-
 };
 
 const el_mouseup = (e) => {
@@ -331,6 +324,14 @@ const el_mouseup = (e) => {
     el.buttondown = false;
 
 };
+
+const el_visible = (e) => {
+
+}
+
+const el_deleted = () => {
+    
+}
 
 const g_paint = () => {
     // set a start/stop flag

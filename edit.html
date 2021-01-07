@@ -140,25 +140,40 @@
         const add_new_element = () => {
             let rect = buildRectObject();
             let el_id = "el_" + el_list.length;
-            let el_html = $("<div class='elementbar' id='" + el_id + "' data-index='"+el_list.length+"'>" +
+            let el_html = $("<div class='elementbar' id='" + el_id + "' data-index='" + el_list.length + "'>" +
                 "<input type='checkbox' class='el_checkbox' alt='Visible or not' checked />" +
                 "<span class='icon-trash el-trash' title='delete'></span>" +
                 "<span class='icon-edit el-edit' title='edit'></span>" +
                 "</div>");
             $(".elementbars").append(el_html);
 
+            $("#" + el_id + " input").click((e) => {
+                console.log("visible click");
+            });
+
+            $("#" + el_id + " .el-trash").click((e) => {
+                console.log("trash click");
+            });
+
+            $("#" + el_id + " .el-edit").click((e) => {
+                console.log("edit click");
+            });
+
             var el_jm = jmGraph.create(el_id, {
                 width: $("#" + el_id).width(),  // this is the size of video
                 height: $("#" + el_id).height(),
             });
 
+            let start = video.currentTime;
+            let end = video.currentTime + 2 > video.duration ? video.duration: video.currentTime + 2;
+
             el_list.push({
                 type: "rect",                       //type
                 object: rect,                       //shape obj
-                start_time: video.currentTime,      //start
-                end_time: video.currentTime + 3,    //end
-                left: video.currentTime / video.duration * (VIDEO_WIDTH - 2),
-                right: (video.currentTime + 3) / video.duration * (VIDEO_WIDTH -2),
+                start_time: start,                  //start
+                end_time: end,                      //end
+                left: start / video.duration * (VIDEO_WIDTH - 2),
+                right: end / video.duration * (VIDEO_WIDTH -2),
                 dom: el_html,
                 jm: el_jm,
                 updated: true //TODO: no modi, no update

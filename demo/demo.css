@@ -177,7 +177,7 @@ hr {
 	display: inline;
 	position: absolute;
 	left: -15px;
-	top: 8px;
+	/* top: 8px; */
 	width: 16px;
 	height: 16px
 }
@@ -194,10 +194,10 @@ hr {
 	color: #F00;
 }
 
-.el-trash:active {
+/* .el-trash:active {
 	left: 817px;
 	top:12px;
-}
+} */
 
 .el-trash {
 	color: #F00;
@@ -215,7 +215,7 @@ hr {
 	color: #F00;
 }
 
-.el-edit:active {
+/* .el-edit:active {
 	left: 842px;
 	top:12px;
-}
+} */
