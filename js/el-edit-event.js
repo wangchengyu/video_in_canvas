@@ -7,29 +7,27 @@ var resizeRect = null;
 
 // resize element object cursor string
 var resizeCursor = "";
+
 // confirm flag
 var confirmed = false;
 
-
+//call back for exit edit mode
 var exit_callback = null;
+
+// repaint loop flag
 var repaint_loop = false;
+
+// video
 var v = null;
 
-var offset_100ms = 0;
-
-var el_state = {
-    left: false,
-    right: false,
-    move: false,
-}
+// offset for 100ms 0.1s
+var offset_100ms = 10;
 
 const setJmObject = function (g, video, ec) {
     jm = g;
     exit_callback = ec;
     confirmed = false;
     v = video;
-
-    offset_100ms = Math.floor((0.1/v.duration) * VIDEO_WIDTH);
 
     let ctx = jm.canvas.getContext("2d");
 
@@ -76,6 +74,10 @@ const setJmObject = function (g, video, ec) {
 
 
     jm.children.add(resizeRect);
+}
+
+const setOffset100ms = (duration) => {
+    offset_100ms = Math.floor((0.1 / duration) * VIDEO_WIDTH);
 }
 
 const initEditMode = (type) => {
@@ -232,7 +234,7 @@ const el_mousedown = (e) => {
 
     el.buttondown = true;
 
-    if (el.state == "move") {
+    if (el.state === "move") {
         el.move_start = e.layerX;
     }
 
@@ -265,7 +267,6 @@ const el_mousemove = (e) => {
     else
         switch (el.state) {
             case "left": {
-
                 if (e.layerX <= 0)
                     el.left = 0;
                 else if (e.layerX > el.right - offset_100ms)
@@ -286,14 +287,12 @@ const el_mousemove = (e) => {
                 else
                     el.right = e.layerX;
 
-                el.end_time = (el.right / VIDEO_HEIGHT) * video.duration;
+                el.end_time = (el.right / VIDEO_WIDTH) * video.duration;
 
                 break;
             }
 
             case "move": {
-
-
                 let offset = e.layerX - el.move_start;
 
                 if (el.left + offset <= 0)
@@ -306,7 +305,7 @@ const el_mousemove = (e) => {
                 el.right += offset;
 
                 el.start_time = (el.left / VIDEO_WIDTH) * video.duration;
-                el.end_time = (el.right / VIDEO_HEIGHT) * video.duration;
+                el.end_time = (el.right / VIDEO_WIDTH) * video.duration;
 
                 el.move_start = e.layerX;
 

@@ -92,9 +92,8 @@
 
     const kf_canvas = g1.canvas;
 
-
     let c = null;
-    let player1 = null;
+    let jm_player = null;
 
     const initPlayer = () => {
         $(player.el_.children[0]).addClass('vjs-hidden');
@@ -105,21 +104,30 @@
             container.removeChild(container.firstChild);
         }
 
-        player1 = jmGraph.create('vjs-text-track-display', {
+        jm_player = jmGraph.create('vjs-text-track-display', {
             width: $("#vjs-text-track-display").width(),
             height: $("#vjs-text-track-display").height(),
         });
 
-        c = player1.canvas.getContext("2d");
+        c = jm_player.canvas.getContext("2d");
 
-        player1.style = {
+        jm_player.style = {
             fillStyle : () => {
-                c.drawImage(video, 0, 0, player1.canvas.width, player1.canvas.height);
+                c.drawImage(video, 0, 0, jm_player.canvas.width, jm_player.canvas.height);
             }
         }
+
+        setOffset100ms(video.duration);
+
+        video.addEventListener("timeupdate", () => {
+            jm_player.needUpdate = true;
+        });
+
     }
 
+
     $(function() {
+
 
         const kf = new KeyFrame(kf_canvas, video);
         const el_list = [];
@@ -156,7 +164,7 @@
                 updated: true //TODO: no modi, no update
             });
 
-            player1.children.add(rect);
+            jm_player.children.add(rect);
 
             rect.el = el_list[el_list.length - 1];
             el_jm.canvas.el = el_list[el_list.length - 1];
@@ -190,18 +198,16 @@
             initEditMode("rect");
         });
 
-
-
         // animation loop
         const raf_update = function() {
-            if (player1 && player1.children && player1.children.length) {
-                player1.children.each((i, item) => {
+            if (jm_player && jm_player.children && jm_player.children.length) {
+                jm_player.children.each((i, item) => {
                     item.visible = video.currentTime > item.el.start_time && video.currentTime < item.el.end_time;
                 })
             }
 
-            if (player1 && (!video.paused ||player1.needUpdate))
-                player1.redraw();
+            if (jm_player && (jm_player.needUpdate))
+                jm_player.redraw();
 
             if (!video.paused)
                 kf.updated = true;

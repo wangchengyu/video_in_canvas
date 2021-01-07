@@ -30,6 +30,7 @@ class KeyFrame {
         this.updated = false;
         this.leaved = true;
 
+        this.jm = null;
         this.canvas = canvas;
         this.video = video;
         this.ctx = this.canvas.getContext('2d');
@@ -192,6 +193,7 @@ class KeyFrame {
                     that.updated = true;
 
                     initPlayer();
+
                 }
             }
 
