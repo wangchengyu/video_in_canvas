@@ -56,8 +56,8 @@
             +
         </button>
         <div id="myDropdown" class="dropdown-content">
-            <a href="#" id="el-rect" class="el-menu">Rect ☐</a>
-            <a href="#" id="el-arrows" class="el-menu">Arrows ⇨</a>
+            <a href="#" id="el-rect" class="el-menu" data-type="rect">Rect ☐</a>
+            <a href="#" id="el-arrows" class="el-menu" data-type="arrow">Arrow ⇨</a>
             <a href="#" id="el-text" class="el-menu">Text</a>
         </div>
     </div>
@@ -110,12 +110,14 @@
         });
 
         c = jm_player.canvas.getContext("2d");
+        jm_player.redraw();
 
-        jm_player.style = {
-            fillStyle : () => {
-                c.drawImage(video, 0, 0, jm_player.canvas.width, jm_player.canvas.height);
-            }
-        }
+
+        // jm_player.style = {
+        //     fillStyle : () => {
+        //         c.drawImage(video, 0, 0, jm_player.canvas.width, jm_player.canvas.height);
+        //     }
+        // }
 
         setOffset100ms(video.duration);
 
@@ -138,7 +140,7 @@
         });
 
         const add_new_element = () => {
-            let rect = buildRectObject();
+            let el_object = buildRectObject();
             let el_id = "el_" + el_list.length;
             let el_html = $("<div class='elementbar' id='" + el_id + "' data-index='" + el_list.length + "'>" +
                 "<input type='checkbox' class='el_checkbox' alt='Visible or not' checked />" +
@@ -148,16 +150,43 @@
                 
             $(".elementbars").append(el_html);
 
-            $("#" + el_id + " input").click((e) => {
-                console.log("visible click");
+            let el = null;
+
+            // visible
+            $("#" + el_id + " input").change((e) => {
+                console.log(el);
+                el.check_visible = $("#" + el_id + " input").prop("checked");
             });
 
+            // deleted
             $("#" + el_id + " .el-trash").click((e) => {
-                console.log("trash click");
+                console.log(el);
+                // invisible
+                jm_player.children.remove(el.object);
+                el.dom.parentNode.removeChild(el.dom);
+
+                el.object = null;
+                el.jm = null;
+                el.dom = null;
+
+                el_list.splice(el.index, 1);
+
+                el = null;
             });
 
+            // editable
             $("#" + el_id + " .el-edit").click((e) => {
-                console.log("edit click");
+                console.log(el);
+
+                video.pause();
+
+                // give el properties to rect
+                updateEditMode(el);
+
+                let body = document.getElementsByTagName("body")[0];
+                $(".cover")
+                    .css("height", body.clientHeight)
+                    .show();
             });
 
             var el_jm = jmGraph.create(el_id, {
@@ -169,21 +198,25 @@
             let end = video.currentTime + 2 > video.duration ? video.duration: video.currentTime + 2;
 
             el_list.push({
+                index: el_list.length,
                 type: "rect",                       //type
-                object: rect,                       //shape obj
+                object: el_object,                       //shape obj
                 start_time: start,                  //start
                 end_time: end,                      //end
                 left: start / video.duration * (VIDEO_WIDTH - 2),
                 right: end / video.duration * (VIDEO_WIDTH -2),
-                dom: el_html,
+                dom: el_html.get(0),
                 jm: el_jm,
-                updated: true //TODO: no modi, no update
+                updated: true, //TODO: no modi, no update
+                check_visible: true
             });
 
-            jm_player.children.add(rect);
+            jm_player.children.add(el_object);
 
-            rect.el = el_list[el_list.length - 1];
-            el_jm.canvas.el = el_list[el_list.length - 1];
+            el = el_list[el_list.length - 1];
+
+            el_object.el = el;
+            el_jm.canvas.el = el;
 
             el_jm.canvas.addEventListener("mousemove", el_mousemove);
             el_jm.canvas.addEventListener("mouseup", el_mouseup);
@@ -191,12 +224,26 @@
 
         };
 
+        const update_element = (u_el) => {
+            let el_object = u_el.object;
 
-        const exit_edit_mode = (state) => {
+            if (u_el.type === 'rect') {
+                el_object.position.x = resizeRect.position.x;
+                el_object.position.y = resizeRect.position.y;
+                el_object.width = resizeRect.width;
+                el_object.height = resizeRect.height;
+            }
+        }
+
+        const exit_edit_mode = (state, u_el) => {
             $(".cover").hide();
 
-            if (state)
+            if (state === "add")
                 add_new_element();
+
+            if (state === "update") {
+                update_element(u_el);
+            }
         }
 
         $(".confirm-edit").click(jm_confirm);
@@ -211,19 +258,23 @@
                 .css("height", body.clientHeight)
                 .show();
 
-            initEditMode("rect");
+            let type = $(event.target).data("type");
+            initEditMode(type);
         });
 
         // animation loop
         const raf_update = function() {
+
+            if (c && jm_player.needUpdate)
+               c.drawImage(video, 0,0, c.canvas.width, c.canvas.height);
+
             if (jm_player && jm_player.children && jm_player.children.length) {
                 jm_player.children.each((i, item) => {
-                    item.visible = video.currentTime > item.el.start_time && video.currentTime < item.el.end_time;
+                    item.visible = item.el.check_visible && (video.currentTime >= item.el.start_time && video.currentTime <= item.el.end_time);
+                    if (item.visible)
+                        item.paint();
                 })
             }
-
-            if (jm_player && (jm_player.needUpdate))
-                jm_player.redraw();
 
             if (!video.paused)
                 kf.updated = true;

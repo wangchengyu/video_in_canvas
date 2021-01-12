@@ -128,7 +128,7 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
 
 var shapes = {
   "arc": _jmArc.jmArc,
-  "arraw": _jmArraw.jmArraw,
+  "arrow": _jmArraw.jmArraw, // arraw ==> arrow
   "bezier": _jmBezier.jmBezier,
   "circle": _jmCircle.jmCircle,
   "harc": _jmHArc.jmHArc,

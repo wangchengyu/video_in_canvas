@@ -8,11 +8,16 @@ var resizeRect = null;
 // resize element object cursor string
 var resizeCursor = "";
 
-// confirm flag
-var confirmed = false;
+//
+var arrow = null;
+
+// edit mode status
+var edit_mode_status = "";
 
 //call back for exit edit mode
 var exit_callback = null;
+
+var update_el = null;
 
 // repaint loop flag
 var repaint_loop = false;
@@ -26,7 +31,6 @@ var offset_100ms = 10;
 const setJmObject = function (g, video, ec) {
     jm = g;
     exit_callback = ec;
-    confirmed = false;
     v = video;
 
     let ctx = jm.canvas.getContext("2d");
@@ -72,8 +76,19 @@ const setJmObject = function (g, video, ec) {
         resizeCursor = "";
     });
 
+    arrow = jm.createShape("resize", {
+        style: style,
+        start: {x:0, y:0},
+        end: {x:0, y:0},
+
+    });
+
+    arrow.visible = false;
+
 
     jm.children.add(resizeRect);
+    jm.children.add(arrow);
+
 }
 
 const setOffset100ms = (duration) => {
@@ -82,12 +97,59 @@ const setOffset100ms = (duration) => {
 
 const initEditMode = (type) => {
 
+    if (type === "arrow") {
+        // resizeRect.style.stroke = 'gray';
+        // resizeRect.style.lineType = "dotted";
+        //
+        // let arrow = jm.createShape("arraw", {
+        //     stroke: "red",
+        //     lineWidth: 5,
+        // });
+        // jm.children.add(arrow);
+        //
+        // resizeRect.on('resize', function(e) {
+        //     console.log(e);
+        // });
+    }
+
+
     jm.bind("mousemove", jm_mousemove);
     jm.bind("mouseup", jm_mouseup);
     jm.bind("mousedown", jm_mousedown);
 
+    arrow.visible = false;
+    repaint_loop = true;
 
-    resizeRect.visible = false;
+    edit_mode_status = "add";
+
+    g_paint();
+
+}
+
+const updateEditMode = (el) => {
+
+    let type = el.type;
+    let o = el.object;
+
+    update_el = el;
+
+    jm.bind("mousemove", jm_mousemove);
+    jm.bind("mouseup", jm_mouseup);
+    jm.bind("mousedown", jm_mousedown);
+
+    if (type === "rect") {
+        resizeRect.position.x = o.position.x;
+        resizeRect.position.y = o.position.y;
+
+        resizeRect.width = o.width;
+        resizeRect.height = o.height;
+
+        resizeRect.reset();
+    }
+
+    edit_mode_status = "update"
+
+    resizeRect.visible = true;
     repaint_loop = true;
 
     g_paint();
@@ -98,15 +160,18 @@ const jm_mousedown = (e) => {
     let event = e.event;
     //set start position
 
-    if (resizeRect.visible)
-        return;
+    //if (type === "rect") {
+        if (resizeRect.visible)
+            return;
 
-    resizeRect.position.x = e.position.x;
-    resizeRect.position.y = e.position.y;
+        resizeRect.position.x = e.position.x;
+        resizeRect.position.y = e.position.y;
 
-    resizeRect.startposition = {x:e.position.x, y: e.position.y};
+        resizeRect.startposition = {x:e.position.x, y: e.position.y};
 
-    resizeRect.visible = true;
+        resizeRect.visible = true;
+    //}
+
 }
 
 const jm_mousedown_start_move = (e) => {
@@ -127,6 +192,9 @@ const jm_mousemove = (e) => {
     //update position
     if (event.buttons === 0)
         return ;
+
+    if (!resizeRect.startposition)
+        return;
 
     let new_x = e.position.x < resizeRect.startposition.x ? e.position.x : resizeRect.startposition.x;
     let new_y = e.position.y < resizeRect.startposition.y ? e.position.y : resizeRect.startposition.y;
@@ -194,7 +262,7 @@ const jm_confirm = () => {
     unbind_jm_event();
     resizeRect.visible = false;
     repaint_loop = false;
-    exit_callback(true);
+    exit_callback(edit_mode_status, update_el);
 
     // {
     //     position : {
@@ -212,7 +280,7 @@ const jm_cancel = () => {
     unbind_jm_event();
     resizeRect.visible = false;
     repaint_loop = false;
-    exit_callback(false);
+    exit_callback("");
 }
 
 const unbind_jm_event = () => {
@@ -246,8 +314,7 @@ const el_mousemove = (e) => {
     let left = el.left;
     let right = el.right;
 
-    if (!el.buttondown && e.buttons == 0)
-
+    if (!el.buttondown && e.buttons === 0) {
         if (e.layerX > left - 2 && e.layerX < left + 2) {
             el.state = "left";
             target.style.cursor = "ew-resize";
@@ -262,7 +329,7 @@ const el_mousemove = (e) => {
             target.style.cursor = "default";
         }
 
-    else
+    } else
         switch (el.state) {
             case "left": {
                 if (e.layerX <= 0)

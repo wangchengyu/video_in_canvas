@@ -269,11 +269,11 @@ class KeyFrame {
 
     }
 
-    drawFloatLine(ctx, just_line) {
+    drawFloatLine(ctx, just_line, other_event) {
         ctx = ctx || this.ctx;
         just_line = !!just_line;
 
-        var event = this.mousemoveEvent;
+        var event = other_event || this.mousemoveEvent;
 
         if (event && event.layerX > VIDEO_WIDTH)
             return;
