@@ -139,8 +139,8 @@
             height: 450,
         });
 
-        const add_new_element = () => {
-            let el_object = buildRectObject();
+        const add_new_element = (type) => {
+            let el_object = buildShapeObject(type);
             let el_id = "el_" + el_list.length;
             let el_html = $("<div class='elementbar' id='" + el_id + "' data-index='" + el_list.length + "'>" +
                 "<input type='checkbox' class='el_checkbox' alt='Visible or not' checked />" +
@@ -170,8 +170,6 @@
                 el.dom = null;
 
                 el_list.splice(el.index, 1);
-
-                el = null;
             });
 
             // editable
@@ -199,7 +197,7 @@
 
             el_list.push({
                 index: el_list.length,
-                type: "rect",                       //type
+                type: type,                       //type
                 object: el_object,                       //shape obj
                 start_time: start,                  //start
                 end_time: end,                      //end
@@ -233,13 +231,24 @@
                 el_object.width = resizeRect.width;
                 el_object.height = resizeRect.height;
             }
+
+            if (u_el.type === 'arrow') {
+                el_object.start.x = arrow.start.x;
+                el_object.start.y = arrow.start.y;
+                el_object.end.x = arrow.end.x;
+                el_object.end.y = arrow.end.y;
+            }
+
+            if (u_el.type === "text") {
+                el_object.text = text.text;
+            }
         }
 
-        const exit_edit_mode = (state, u_el) => {
+        const exit_edit_mode = (state, type,  u_el) => {
             $(".cover").hide();
 
             if (state === "add")
-                add_new_element();
+                add_new_element(type);
 
             if (state === "update") {
                 update_element(u_el);
