@@ -5986,6 +5986,7 @@ var jmLabel = /*#__PURE__*/function (_jmControl) {
     },
     set: function set(v) {
       this.needUpdate = true;
+
       return this.__pro('text', v);
     }
     /**

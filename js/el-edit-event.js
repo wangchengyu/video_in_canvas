@@ -11,6 +11,9 @@ var resizeCursor = "";
 //
 var arrow = null;
 
+var label = null;
+var labelRect = null;
+
 // edit mode status
 var edit_mode_status = "";
 var edit_mode_type = "";
@@ -87,8 +90,17 @@ const setJmObject = function (g, video, ec) {
 
     arrow.visible = false;
 
+
+    label = jm.createShape("label", {});
+    labelRect = jm.createShape("rect", {close:true});
+
+    label.visible = false;
+    labelRect.visible = false;
+
     jm.children.add(resizeRect);
     jm.children.add(arrow);
+    jm.children.add(label);
+    jm.children.add(labelRect);
 
 }
 
@@ -97,15 +109,52 @@ const setOffset100ms = (duration) => {
 }
 
 const initEditMode = (type) => {
+    if (type === "rect" ||
+        type === "arrow") {
 
-    jm.bind("mousemove", jm_mousemove);
-    jm.bind("mouseup", jm_mouseup);
-    jm.bind("mousedown", jm_mousedown);
+        jm.bind("mousemove", jm_mousemove);
+        jm.bind("mouseup", jm_mouseup);
+        jm.bind("mousedown", jm_mousedown);
+
+
+    }
+
+    if (type === "label") {
+        label.style = {
+            stroke:"#c00",
+            fill: "#c00",
+            font: "36px Arial",
+            fontFamily: "Arial",
+            fontSize: 36,
+            textAlign: "center",
+            textBaseline: "bottom"
+        };
+
+        label.text = "Demo Text";
+        label.center = {x: jm.width / 2, y: jm.height - 36 * 2};
+
+        label.initPoints();
+
+        label.visible = true;
+
+        resetRectByLabel(labelRect, label);
+
+        labelRect.style = {stroke: "#FFF", lineWidth: 2, close:true};
+
+        labelRect.initPoints();
+
+        labelRect.visible = true;
+
+        jm.bind("mousedown", jm_mousedown_start_move);
+        jm.bind("mousemove", jm_mousemove_label);
+        jm.bind("mouseup", jm_mouseup_end_move);
+    }
+
+
+    repaint_loop = true;
 
     arrow.visible = false;
     resizeRect.visible = false;
-
-    repaint_loop = true;
 
     edit_mode_status = "add";
     edit_mode_type = type;
@@ -149,6 +198,16 @@ const updateEditMode = (el) => {
         arrow.visible = true;
     }
 
+    if (type === "label") {
+        label.text = o.text;
+        label.center = Object.assign({}, o.center);
+        label.style = Object.assign({}, o.style);
+
+        label.initPoints();
+
+        resetRectByLabel(labelRect, label);
+    }
+
     edit_mode_status = "update"
     edit_mode_type = el.type;
 
@@ -156,6 +215,41 @@ const updateEditMode = (el) => {
     repaint_loop = true;
 
     g_paint();
+
+}
+
+const resetRectByLabel = (r, l) => {
+    l.width = 0;
+    l.testSize();
+
+    let label_position = l.getLocation();
+
+    r.position = {
+        x: label_position.left - 4,
+        y: label_position.top - 60 + 16
+    };
+
+    r.width = label_position.width + 12;
+    r.height = label_position.height + 36;
+
+    r.initPoints();
+}
+const jm_mousedown_label = (e) => {
+
+
+}
+
+const  jm_mousemove_label = (e) => {
+    return;
+    if (   (e.position.x > labelRect.position.x && e.position.x < labelRect.position.x + labelRect.width)
+        && (e.position.y > labelRect.position.y && e.position.y < labelRect.position.y + labelRect.height)){
+        jm.cursor = "move";
+    } else {
+        jm.cursor = "default";
+    }
+}
+
+const jm_mouseup_label = (e) => {
 
 }
 
@@ -407,6 +501,9 @@ const buildShapeObject = (type) => {
     if (type === "arrow")
         return buildArrowObject();
 
+    if (type === "label")
+        return buildLabelObject();
+
 }
 const buildArrowObject = () => {
     let o = jm.createShape("arrawline", {
@@ -431,6 +528,13 @@ const buildRectObject = () => {
     });
 }
 
+const buildLabelObject = () => {
+    return jm.createShape("label", {
+        style: Object.assign({}, label.style),
+        center: Object.assign({}, label.center),
+        text: label.text
+    });
+}
 
 const jm_confirm = () => {
     unbind_jm_event();
@@ -457,6 +561,16 @@ const jm_cancel = () => {
     arrow.visible = false;
     repaint_loop = false;
     exit_callback("");
+}
+
+const jm_label_change = (e) => {
+    label.text = e.target.value;
+    label.width = 0;
+
+
+    label.initPoints();
+
+    resetRectByLabel(labelRect, label);
 }
 
 const unbind_jm_event = () => {

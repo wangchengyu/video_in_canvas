@@ -17,10 +17,11 @@
 <body>
 <div class="cover" >
     <div class="paint-pad" id="paint-pad"></div>
-    <div class="button-div" >
+    <div class="button-div" ><label class="label label-txt">Label Text:
+        <input class="form-control label-txt" type="text" value="Demo Text"></label>
+        <hr class="label-txt">
         <button class="btn btn-primary confirm-edit" >Confirm</button>
         <button class="btn btn-light cancel-edit" >Cancel</button></div>
-
 </div>
 <div class="header">
     <div class="content">
@@ -58,7 +59,7 @@
         <div id="myDropdown" class="dropdown-content">
             <a href="#" id="el-rect" class="el-menu" data-type="rect">Rect ☐</a>
             <a href="#" id="el-arrows" class="el-menu" data-type="arrow">Arrow ⇨</a>
-            <a href="#" id="el-text" class="el-menu">Text</a>
+            <a href="#" id="el-text" class="el-menu" data-type="label">Text</a>
         </div>
     </div>
 
@@ -139,10 +140,13 @@
             height: 450,
         });
 
+        let el_id_index = 0;
+
         const add_new_element = (type) => {
+            let id = el_id_index++;
             let el_object = buildShapeObject(type);
-            let el_id = "el_" + el_list.length;
-            let el_html = $("<div class='elementbar' id='" + el_id + "' data-index='" + el_list.length + "'>" +
+            let el_id_name = "el_" + id;
+            let el_html = $("<div class='elementbar' id='" + el_id_name + "' data-index='" + id + "'>" +
                 "<input type='checkbox' class='el_checkbox' alt='Visible or not' checked />" +
                 "<span class='icon-trash el-trash' title='delete'></span>" +
                 "<span class='icon-edit el-edit' title='edit'></span>" +
@@ -150,32 +154,67 @@
                 
             $(".elementbars").append(el_html);
 
-            let el = null;
+            let start = video.currentTime;
+            let end = video.currentTime + 2 > video.duration ? video.duration: video.currentTime + 2;
+            let left = start / video.duration * (VIDEO_WIDTH - 2);
+            let right = end / video.duration * (VIDEO_WIDTH -2);
+
+            var el_jm = jmGraph.create(el_id_name, {
+                width: $("#" + el_id_name).width(),  // this is the size of video
+                height: $("#" + el_id_name).height(),
+            });
+
+            let el = {
+                index: id,                          //unique id
+                type: type,                         //type: rect arrow
+                object: el_object,                  //shape obj
+                start_time: start,                  //start
+                end_time: end,                      //end
+                left: left,
+                right: right,
+                dom: el_html.get(0),
+                jm: el_jm,
+                updated: true,                      //TODO: no modi, no update
+                check_visible: true
+            };
+
+            el_object.el = el;
+            el_jm.canvas.el = el;
+
+            el_jm.canvas.addEventListener("mousemove", el_mousemove);
+            el_jm.canvas.addEventListener("mouseup", el_mouseup);
+            el_jm.canvas.addEventListener("mousedown", el_mousedown);
+
+            jm_player.children.add(el_object);
+
+            el_list.push(el);
 
             // visible
-            $("#" + el_id + " input").change((e) => {
-                console.log(el);
-                el.check_visible = $("#" + el_id + " input").prop("checked");
+            $("#" + el_id_name + " input").change((e) => {
+                el.check_visible = $("#" + el_id_name + " input").prop("checked");
             });
 
             // deleted
-            $("#" + el_id + " .el-trash").click((e) => {
-                console.log(el);
+            $("#" + el_id_name + " .el-trash").click((e) => {
                 // invisible
-                jm_player.children.remove(el.object);
+                el.object.remove();
                 el.dom.parentNode.removeChild(el.dom);
 
                 el.object = null;
                 el.jm = null;
                 el.dom = null;
 
-                el_list.splice(el.index, 1);
+                for (var i = 0; i < el_list.length; i++) {
+                    if (el_list[i].index === el.index) {
+                        el_list.splice(i, 1);
+                        break;
+                    }
+                }
+
             });
 
             // editable
-            $("#" + el_id + " .el-edit").click((e) => {
-                console.log(el);
-
+            $("#" + el_id_name + " .el-edit").click((e) => {
                 video.pause();
 
                 // give el properties to rect
@@ -185,41 +224,14 @@
                 $(".cover")
                     .css("height", body.clientHeight)
                     .show();
+
+                if (el.type === "label") {
+                    $(".label-txt").show();
+                    $("input.label-txt").val(el.object.text);
+
+                } else
+                    $(".label-txt").hide();
             });
-
-            var el_jm = jmGraph.create(el_id, {
-                width: $("#" + el_id).width(),  // this is the size of video
-                height: $("#" + el_id).height(),
-            });
-
-            let start = video.currentTime;
-            let end = video.currentTime + 2 > video.duration ? video.duration: video.currentTime + 2;
-
-            el_list.push({
-                index: el_list.length,
-                type: type,                       //type
-                object: el_object,                       //shape obj
-                start_time: start,                  //start
-                end_time: end,                      //end
-                left: start / video.duration * (VIDEO_WIDTH - 2),
-                right: end / video.duration * (VIDEO_WIDTH -2),
-                dom: el_html.get(0),
-                jm: el_jm,
-                updated: true, //TODO: no modi, no update
-                check_visible: true
-            });
-
-            jm_player.children.add(el_object);
-
-            el = el_list[el_list.length - 1];
-
-            el_object.el = el;
-            el_jm.canvas.el = el;
-
-            el_jm.canvas.addEventListener("mousemove", el_mousemove);
-            el_jm.canvas.addEventListener("mouseup", el_mouseup);
-            el_jm.canvas.addEventListener("mousedown", el_mousedown);
-
         };
 
         const update_element = (u_el) => {
@@ -239,8 +251,11 @@
                 el_object.end.y = arrow.end.y;
             }
 
-            if (u_el.type === "text") {
-                el_object.text = text.text;
+            if (u_el.type === "label") {
+                el_object.text = label.text;
+                el_object.center = Object.assign({}, label.center);
+                el_object.style = Object.assign({}, label.center);
+
             }
         }
 
@@ -257,6 +272,7 @@
 
         $(".confirm-edit").click(jm_confirm);
         $(".cancel-edit").click(jm_cancel);
+        $("input.label-txt").keyup(jm_label_change);
 
         setJmObject(paint, video, exit_edit_mode);
 
@@ -268,6 +284,13 @@
                 .show();
 
             let type = $(event.target).data("type");
+
+            if (type === "label") {
+                $(".label-txt").show();
+                $("input.label-txt").val("Demo Text");
+            } else
+                $(".label-txt").hide();
+
             initEditMode(type);
         });
 
