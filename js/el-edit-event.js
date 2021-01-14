@@ -145,9 +145,10 @@ const initEditMode = (type) => {
 
         labelRect.visible = true;
 
-        jm.bind("mousedown", jm_mousedown_start_move);
+        jm.bind("mousedown", jm_mousedown_label);
         jm.bind("mousemove", jm_mousemove_label);
-        jm.bind("mouseup", jm_mouseup_end_move);
+        jm.bind("mouseup", jm_mouseup_label);
+
     }
 
 
@@ -170,11 +171,12 @@ const updateEditMode = (el) => {
 
     update_el = el;
 
-    jm.bind("mousemove", jm_mousemove);
-    jm.bind("mouseup", jm_mouseup);
-    jm.bind("mousedown", jm_mousedown);
-
     if (type === "rect") {
+
+        jm.bind("mousemove", jm_mousemove);
+        jm.bind("mouseup", jm_mouseup);
+        jm.bind("mousedown", jm_mousedown);
+
         resizeRect.position.x = o.position.x;
         resizeRect.position.y = o.position.y;
 
@@ -187,6 +189,11 @@ const updateEditMode = (el) => {
     }
 
     if (type === "arrow") {
+
+        jm.bind("mousemove", jm_mousemove);
+        jm.bind("mouseup", jm_mouseup);
+        jm.bind("mousedown", jm_mousedown);
+
         arrow.start.x = o.start.x;
         arrow.start.y = o.start.y;
 
@@ -199,6 +206,11 @@ const updateEditMode = (el) => {
     }
 
     if (type === "label") {
+
+        jm.bind("mousedown", jm_mousedown_label);
+        jm.bind("mousemove", jm_mousemove_label);
+        jm.bind("mouseup", jm_mouseup_label);
+
         label.text = o.text;
         label.center = Object.assign({}, o.center);
         label.style = Object.assign({}, o.style);
@@ -235,22 +247,35 @@ const resetRectByLabel = (r, l) => {
     r.initPoints();
 }
 const jm_mousedown_label = (e) => {
-
+    if (jm.cursor === "move") {
+        label.move_pos = Object.assign({}, e.position)
+    }
 
 }
 
 const  jm_mousemove_label = (e) => {
-    return;
+
     if (   (e.position.x > labelRect.position.x && e.position.x < labelRect.position.x + labelRect.width)
         && (e.position.y > labelRect.position.y && e.position.y < labelRect.position.y + labelRect.height)){
         jm.cursor = "move";
     } else {
         jm.cursor = "default";
     }
+
+    if (label.move_pos) {
+        label.center.x += e.position.x - label.move_pos.x;
+        label.center.y += e.position.y - label.move_pos.y;
+
+        label.move_pos = Object.assign({}, e.position);
+
+        label.initPoints();
+
+        resetRectByLabel(labelRect,label);
+    }
 }
 
 const jm_mouseup_label = (e) => {
-
+    label.move_pos = null;
 }
 
 const jm_mousedown = (e) => {
@@ -395,8 +420,6 @@ const jm_mousemove_move_el = (e) => {
                 jm.cursor = "default"
             arrow.move_status = "";
         }
-
-
 
         if (arrow.move_position) {
             arrow.start.x += e.position.x - arrow.move_position.x;
@@ -581,6 +604,10 @@ const unbind_jm_event = () => {
     jm.unbind("mousedown", jm_mousedown_start_move);
     jm.unbind("mousemove", jm_mousemove_move_el);
     jm.unbind("mouseup", jm_mouseup_end_move);
+
+    jm.unbind("mousedown", jm_mousedown_label);
+    jm.unbind("mousemove", jm_mousemove_label);
+    jm.unbind("mouseup", jm_mouseup_label);
 }
 
 const el_mousedown = (e) => {
