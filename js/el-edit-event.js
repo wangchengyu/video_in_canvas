@@ -563,6 +563,9 @@ const jm_confirm = () => {
     unbind_jm_event();
     resizeRect.visible = false;
     arrow.visible = false;
+    label.visible = false;
+    labelRect.visible = false;
+
     repaint_loop = false;
     exit_callback(edit_mode_status, edit_mode_type, update_el);
 
@@ -582,6 +585,8 @@ const jm_cancel = () => {
     unbind_jm_event();
     resizeRect.visible = false;
     arrow.visible = false;
+    label.visible = false;
+    labelRect.visible = false;
     repaint_loop = false;
     exit_callback("");
 }
