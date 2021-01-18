@@ -2,7 +2,7 @@ const MAX_KEY_FRAME = 20;
 const CLIP_RATIO = 0.25;
 
 const VIDEO_WIDTH = 800;
-const VIDEO_HEIGHT = 600;
+const VIDEO_HEIGHT = 450;
 
 const THUMB_WIDTH = 160;
 const THUMB_HEIGHT = 100;
@@ -30,6 +30,7 @@ class KeyFrame {
         this.updated = false;
         this.leaved = true;
 
+        this.jm = null;
         this.canvas = canvas;
         this.video = video;
         this.ctx = this.canvas.getContext('2d');
@@ -154,6 +155,7 @@ class KeyFrame {
         var that = this;
         return (event) => {
             that.video.currentTime = that.video.duration * event.layerX / VIDEO_WIDTH;
+            that.updated = true;
         }
     }
 
@@ -179,7 +181,7 @@ class KeyFrame {
             var i = 0;
             var time_update = function() {
                 if (i < MAX_KEY_FRAME) {
-                    tmp_canvas_ctx.drawImage(video,0,0, 800, 600);
+                    tmp_canvas_ctx.drawImage(video,0,0, VIDEO_WIDTH, VIDEO_HEIGHT);
                     imgs_list[i].setAttribute('src', tmp_canvas.toDataURL());
                     video.currentTime = time_point_list[i];
                     i++;
@@ -189,6 +191,9 @@ class KeyFrame {
                     video.onloadeddata = null;
                     div.style.display = "none";
                     that.updated = true;
+
+                    initPlayer();
+
                 }
             }
 
@@ -264,9 +269,11 @@ class KeyFrame {
 
     }
 
-    drawFloatLine(ctx) {
+    drawFloatLine(ctx, just_line, other_event) {
         ctx = ctx || this.ctx;
-        var event = this.mousemoveEvent;
+        just_line = !!just_line;
+
+        var event = other_event || this.mousemoveEvent;
 
         if (event && event.layerX > VIDEO_WIDTH)
             return;
@@ -275,18 +282,26 @@ class KeyFrame {
             return;
 
         ctx.beginPath();
+
         ctx.strokeStyle = "#F00";
         ctx.lineWidth = 2;
         ctx.moveTo(event.layerX, 0);
-        ctx.lineTo(event.layerX + 3, 0);
-        ctx.lineTo(event.layerX, 3);
-        ctx.lineTo(event.layerX - 3, 0);
-        ctx.lineTo(event.layerX, 0);
-        ctx.lineTo(event.layerX, 130);
+
+        if (!just_line) {
+            ctx.lineTo(event.layerX + 3, 0);
+            ctx.lineTo(event.layerX, 3);
+            ctx.lineTo(event.layerX - 3, 0);
+            ctx.lineTo(event.layerX, 0);
+        }
+
+        ctx.lineTo(event.layerX, ctx.canvas.height);
         ctx.stroke();
 
-        ctx.fillStyle = "#000"
-        ctx.fillText(timeformat(this.video.duration * (event.layerX / VIDEO_WIDTH)), event.layerX + 5, 10);
+        if (!just_line) {
+            ctx.fillStyle = "#000"
+            ctx.fillText(timeformat(this.video.duration * (event.layerX / VIDEO_WIDTH)), event.layerX + 5, 10);
+        }
+
     }
 
     drawTimeLine(ctx, video) {
