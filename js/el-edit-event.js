@@ -637,20 +637,19 @@ const el_mousemove = (e) => {
     let right = el.right;
 
     if (!el.buttondown && e.buttons === 0) {
-        if (e.layerX > left - 2 && e.layerX < left + 2) {
+        if (Math.abs(e.layerX - left) <= 2) {
             el.state = "left";
             target.style.cursor = "ew-resize";
-        } else if (e.layerX > right - 2 && e.layerX < right + 2) {
+        } else if (Math.abs(e.layerX - right) <= 2) {
             el.state = "right";
             target.style.cursor = "ew-resize";
-        } else if (e.layerX > left + 3 && e.layerX < right - 3) {
+        } else if (e.layerX > left + 2 && e.layerX < right - 2) {
             el.state = "move";
             target.style.cursor = "move";
         } else {
             el.state = "";
             target.style.cursor = "default";
         }
-
     } else
         switch (el.state) {
             case "left": {
@@ -682,11 +681,15 @@ const el_mousemove = (e) => {
             case "move": {
                 let offset = e.layerX - el.move_start;
 
-                if (el.left + offset <= 0)
-                    break;
+                if (el.left + offset <= 0){
+                    offset = 0 - el.left;
+                }
 
-                if (el.right + offset >= VIDEO_WIDTH)
-                    break;
+
+                if (el.right + offset >= VIDEO_WIDTH) {
+                    offset = VIDEO_WIDTH - el.right;
+                }
+
 
                 el.left += offset;
                 el.right += offset;
