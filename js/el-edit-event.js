@@ -466,7 +466,7 @@ const jm_mouseup = (e) => {
     jm.bind("mousedown", jm_mousedown_start_move);
     jm.bind("mousemove", jm_mousemove_move_el);
     jm.bind("mouseup", jm_mouseup_end_move);
-
+//
     if (edit_mode_type === "arrow") {
         const arrow_mouse_down = (e) => {
             if (!arrow.move_status)
