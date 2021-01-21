@@ -93,32 +93,24 @@
 
     const kf_canvas = g1.canvas;
 
-    let c = null;
+    let jm_player_ctx = null;
     let jm_player = null;
 
     const initPlayer = () => {
-        $(player.el_.children[0]).addClass('vjs-hidden');
-        var container = $(".vjs-text-track-display").get(0);
+        video.classList.add('vjs-hidden');
+
+        let container = document.getElementsByClassName("vjs-text-track-display")[0];
         container.id = "vjs-text-track-display";
         container.style.bottom = 0;
-        while (container.firstChild) {
-            container.removeChild(container.firstChild);
-        }
+        container.removeChild(container.firstChild);
 
         jm_player = jmGraph.create('vjs-text-track-display', {
-            width: $("#vjs-text-track-display").width(),
-            height: $("#vjs-text-track-display").height(),
+            width: container.clientWidth,
+            height: container.clientHeight,
         });
 
-        c = jm_player.canvas.getContext("2d");
-        jm_player.redraw();
-
-
-        // jm_player.style = {
-        //     fillStyle : () => {
-        //         c.drawImage(video, 0, 0, jm_player.canvas.width, jm_player.canvas.height);
-        //     }
-        // }
+        jm_player_ctx = jm_player.canvas.getContext("2d");
+        jm_player.redraw(); //init paint pad
 
         setOffset100ms(video.duration);
 
@@ -126,113 +118,119 @@
             jm_player.needUpdate = true;
         });
 
+        //start render
+        raf_update();
+
     }
 
+    const kf = new KeyFrame(kf_canvas, video);
+    const el_list = [];
 
-    $(function() {
+    const paint = jmGraph.create('paint-pad', {
+        width: 800,
+        height: 450,
+    });
 
+    let el_id_index = 0;
 
-        const kf = new KeyFrame(kf_canvas, video);
-        const el_list = [];
+    const add_new_element = (type) => {
+        let id = el_id_index++;
+        let el_object = buildShapeObject(type);
+        let el_id_name = "el_" + id;
+        let el_html = $("<div class='elementbar' id='" + el_id_name + "' data-index='" + id + "'>" +
+            "<input type='checkbox' class='el_checkbox' alt='Visible or not' checked />" +
+            "<span class='icon-trash el-trash' title='delete'></span>" +
+            "<span class='icon-edit el-edit' title='edit'></span>" +
+            "</div>");
 
-        const paint = jmGraph.create('paint-pad', {
-            width: 800,
-            height: 450,
+        $(".elementbars").append(el_html);
+
+        let start = video.currentTime;
+        let end = video.currentTime + 2 > video.duration ? video.duration: video.currentTime + 2;
+        let left = start / video.duration * (VIDEO_WIDTH - 2);
+        let right = end / video.duration * (VIDEO_WIDTH -2);
+
+        var el_jm = jmGraph.create(el_id_name, {
+            width: document.getElementById(el_id_name).clientWidth,  // this is the size of video
+            height: document.getElementById(el_id_name).clientHeight,
         });
 
-        let el_id_index = 0;
-
-        const add_new_element = (type) => {
-            let id = el_id_index++;
-            let el_object = buildShapeObject(type);
-            let el_id_name = "el_" + id;
-            let el_html = $("<div class='elementbar' id='" + el_id_name + "' data-index='" + id + "'>" +
-                "<input type='checkbox' class='el_checkbox' alt='Visible or not' checked />" +
-                "<span class='icon-trash el-trash' title='delete'></span>" +
-                "<span class='icon-edit el-edit' title='edit'></span>" +
-                "</div>");
-                
-            $(".elementbars").append(el_html);
-
-            let start = video.currentTime;
-            let end = video.currentTime + 2 > video.duration ? video.duration: video.currentTime + 2;
-            let left = start / video.duration * (VIDEO_WIDTH - 2);
-            let right = end / video.duration * (VIDEO_WIDTH -2);
-
-            var el_jm = jmGraph.create(el_id_name, {
-                width: $("#" + el_id_name).width(),  // this is the size of video
-                height: $("#" + el_id_name).height(),
-            });
-
-            let el = {
-                index: id,                          //unique id
-                type: type,                         //type: rect arrow
-                object: el_object,                  //shape obj
-                start_time: start,                  //start
-                end_time: end,                      //end
-                left: left,
-                right: right,
-                dom: el_html.get(0),
-                jm: el_jm,
-                updated: true,                      //TODO: no modi, no update
-                check_visible: true
-            };
-
-            el_object.el = el;
-            el_jm.canvas.el = el;
-
-            el_jm.canvas.addEventListener("mousemove", el_mousemove);
-            el_jm.canvas.addEventListener("mouseup", el_mouseup);
-            el_jm.canvas.addEventListener("mousedown", el_mousedown);
-
-            jm_player.children.add(el_object);
-
-            el_list.push(el);
-
-            // visible
-            $("#" + el_id_name + " input").change((e) => {
-                el.check_visible = $("#" + el_id_name + " input").prop("checked");
-            });
-
-            // deleted
-            $("#" + el_id_name + " .el-trash").click((e) => {
-                // invisible
-                el.object.remove();
-                el.dom.parentNode.removeChild(el.dom);
-
-                el.object = null;
-                el.jm = null;
-                el.dom = null;
-
-                for (var i = 0; i < el_list.length; i++) {
-                    if (el_list[i].index === el.index) {
-                        el_list.splice(i, 1);
-                        break;
-                    }
-                }
-
-            });
-
-            // editable
-            $("#" + el_id_name + " .el-edit").click((e) => {
-                video.pause();
-
-                // give el properties to rect
-                updateEditMode(el);
-
-                let body = document.getElementsByTagName("body")[0];
-                $(".cover")
-                    .css("height", body.clientHeight)
-                    .show();
-
-                if (el.type === "label") {
-                    $(".label-txt").show();
-                    $("input.label-txt").val(el.object.text);
-
-                } else
-                    $(".label-txt").hide();
-            });
+        let el = {
+            index: id,                          //unique id
+            type: type,                         //type: rect arrow
+            object: el_object,                  //shape obj
+            start_time: start,                  //start
+            end_time: end,                      //end
+            left: left,
+            right: right,
+            dom: el_html.get(0),
+            jm: el_jm,
+            updated: true,                      //TODO: no modi, no update
+            check_visible: true
         };
+
+        el_object.el = el;
+        el_jm.canvas.el = el;
+
+        el_jm.canvas.addEventListener("mousemove", el_mousemove);
+        el_jm.canvas.addEventListener("mouseup", el_mouseup);
+        el_jm.canvas.addEventListener("mousedown", el_mousedown);
+
+        jm_player.children.add(el_object);
+
+        el_list.push(el);
+
+        // visible
+        $("#" + el_id_name + " input").change((e) => {
+            el.check_visible = $("#" + el_id_name + " input").prop("checked");
+        });
+
+        // deleted
+        $("#" + el_id_name + " .el-trash").click((e) => {
+            // invisible
+            el.object.remove();
+            el.dom.parentNode.removeChild(el.dom);
+
+            el.object = null;
+            el.jm = null;
+            el.dom = null;
+
+            for (var i = 0; i < el_list.length; i++) {
+                if (el_list[i].index === el.index) {
+                    el_list.splice(i, 1);
+                    break;
+                }
+            }
+
+        });
+
+        // editable
+        $("#" + el_id_name + " .el-edit").click((e) => {
+            video.pause();
+
+            //
+            // if (video.currentTime < el.start_time)
+            //     video.currentTime = el.start_time;
+            //
+            // if (video.currentTime > el.end_time)
+            //     video.currentTime = el.end_time;
+
+            // give el properties to rect
+            updateEditMode(el);
+
+            let body = document.getElementsByTagName("body")[0];
+            $(".cover")
+                .css("height", body.clientHeight)
+                .show();
+
+            if (el.type === "label") {
+                $(".label-txt").show();
+                $("input.label-txt").val(el.object.text);
+
+            } else
+                $(".label-txt").hide();
+        });
+    };
 
         const update_element = (u_el) => {
             let el_object = u_el.object;
@@ -259,104 +257,88 @@
             }
         }
 
-        const exit_edit_mode = (state, type,  u_el) => {
-            $(".cover").hide();
+    const exit_edit_mode = (state, type,  u_el) => {
+        $(".cover").hide();
 
-            if (state === "add")
-                add_new_element(type);
+        if (state === "add")
+            add_new_element(type);
 
-            if (state === "update") {
-                update_element(u_el);
+        if (state === "update") {
+            update_element(u_el);
+        }
+    }
+
+    $(".confirm-edit").click(jm_confirm);
+    $(".cancel-edit").click(jm_cancel);
+    $("input.label-txt").keyup(jm_label_change);
+
+    setJmObject(paint, video, exit_edit_mode);
+
+    $(".el-menu").click((event)=>{
+        // go to edit mode
+        let body = document.getElementsByTagName("body")[0];
+        $(".cover")
+            .css("height", body.clientHeight)
+            .show();
+
+        let type = $(event.target).data("type");
+
+        if (type === "label") {
+            $(".label-txt").show();
+            $("input.label-txt").val("Demo Text");
+        } else
+            $(".label-txt").hide();
+
+        initEditMode(type);
+    });
+
+    // animation loop
+    const raf_update = function() {
+
+        if (jm_player_ctx && jm_player.needUpdate)
+           jm_player_ctx.drawImage(video, 0,0, jm_player_ctx.canvas.width, jm_player_ctx.canvas.height);
+
+        if (jm_player && jm_player.children && jm_player.children.length) {
+            jm_player.children.each((i, item) => {
+                item.visible = item.el.check_visible && (video.currentTime >= item.el.start_time && video.currentTime <= item.el.end_time);
+                if (item.visible)
+                    item.paint();
+            })
+        }
+
+        if (!video.paused)
+            kf.updated = true;
+
+        if (kf.updated) {
+            kf.refreshBackground();
+            kf.fillAllTimeLabel();
+            kf.fillAllPreviewImages();
+            kf.drawTimeLine();
+            kf.drawFloatLine();
+            kf.setFloatPreviewPosition();
+
+            kf.updated = false;
+        }
+
+        if (el_list.length > 0) {
+            for (var i = 0; i < el_list.length; i++) {
+                let el = el_list[i];
+
+                if (!el.updated)
+                    continue;
+
+                let el_ctx = draw_el(el);
+
+                kf.drawFloatLine(el_ctx, true);
             }
         }
 
-        $(".confirm-edit").click(jm_confirm);
-        $(".cancel-edit").click(jm_cancel);
-        $("input.label-txt").keyup(jm_label_change);
-
-        setJmObject(paint, video, exit_edit_mode);
-
-        $(".el-menu").click((event)=>{
-            // go to edit mode
-            let body = document.getElementsByTagName("body")[0];
-            $(".cover")
-                .css("height", body.clientHeight)
-                .show();
-
-            let type = $(event.target).data("type");
-
-            if (type === "label") {
-                $(".label-txt").show();
-                $("input.label-txt").val("Demo Text");
-            } else
-                $(".label-txt").hide();
-
-            initEditMode(type);
-        });
-
-        // animation loop
-        const raf_update = function() {
-
-            if (c && jm_player.needUpdate)
-               c.drawImage(video, 0,0, c.canvas.width, c.canvas.height);
-
-            if (jm_player && jm_player.children && jm_player.children.length) {
-                jm_player.children.each((i, item) => {
-                    item.visible = item.el.check_visible && (video.currentTime >= item.el.start_time && video.currentTime <= item.el.end_time);
-                    if (item.visible)
-                        item.paint();
-                })
-            }
-
-            if (!video.paused)
-                kf.updated = true;
-
-            if (kf.updated) {
-                kf.refreshBackground();
-                kf.fillAllTimeLabel();
-                kf.fillAllPreviewImages();
-                kf.drawTimeLine();
-                kf.drawFloatLine();
-                kf.setFloatPreviewPosition();
-
-                kf.updated = false;
-            }
-
-            if (el_list.length > 0) {
-                for (var i = 0; i < el_list.length; i++) {
-                    let el = el_list[i];
-
-                    if (!el.updated)
-                        continue;
-
-                    let canvas = el.jm.canvas;
-                    let el_ctx = canvas.getContext('2d');
-
-                    el_ctx.beginPath();
-                    el_ctx.fillStyle = "#000";
-                    el_ctx.fillRect(0, 0, VIDEO_WIDTH, 20);
-                    el_ctx.fillStyle = "#FFF";
-                    el_ctx.fillRect(1, 1, VIDEO_WIDTH - 2 , 20 - 2);
-
-                    el_ctx.fillStyle = "#8F8";
-
-                    el_ctx.fillRect(el.left + 1, 1, (el.right - el.left), 20 - 2);
-                    el_ctx.stroke();
-
-                    kf.drawFloatLine(el_ctx, true);
-                }
-            }
+        requestAnimationFrame(raf_update);
+    };
 
 
-            requestAnimationFrame(raf_update);
-        };
 
-        raf_update();
-
-    });
-
-    /* When the user clicks on the button,
-toggle between hiding and showing the dropdown content */
+    /* When the user clicks on the button, toggle between hiding and showing the dropdown content */
     function myFunction() {
         document.getElementById("myDropdown").style.display = "inline";
     }

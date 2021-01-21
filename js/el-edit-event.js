@@ -217,6 +217,9 @@ const updateEditMode = (el) => {
 
         label.initPoints();
 
+        label.visible = true;
+        labelRect.visible = true;
+
         resetRectByLabel(labelRect, label);
     }
 
@@ -245,6 +248,24 @@ const resetRectByLabel = (r, l) => {
     r.height = label_position.height + 36;
 
     r.initPoints();
+}
+
+const draw_el = (el) => {
+    let canvas = el.jm.canvas;
+    let el_ctx = canvas.getContext('2d');
+
+    el_ctx.beginPath();
+    el_ctx.fillStyle = "#000";
+    el_ctx.fillRect(0, 0, VIDEO_WIDTH, 20);
+    el_ctx.fillStyle = "#FFF";
+    el_ctx.fillRect(1, 1, VIDEO_WIDTH - 2 , 20 - 2);
+
+    el_ctx.fillStyle = "#8F8";
+
+    el_ctx.fillRect(el.left + 1, 1, (el.right - el.left), 20 - 2);
+    el_ctx.stroke();
+
+    return el_ctx;
 }
 const jm_mousedown_label = (e) => {
     if (jm.cursor === "move") {
