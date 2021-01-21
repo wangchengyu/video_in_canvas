@@ -1,36 +1,36 @@
 
 // paint pad object
-var jm = null;
+let jm = null;
 
 // resize element object
-var resizeRect = null;
+let resizeRect = null;
 
 // resize element object cursor string
-var resizeCursor = "";
+let resizeCursor = "";
 
 //
-var arrow = null;
+let arrow = null;
 
-var label = null;
-var labelRect = null;
+let label = null;
+let labelRect = null;
+
+let updateEl = null;
 
 // edit mode status
-var edit_mode_status = "";
-var edit_mode_type = "";
+let editModeStatus = "";
+let editModeType = "";
 
 //call back for exit edit mode
-var exit_callback = null;
-
-var update_el = null;
+let exit_callback = null;
 
 // repaint loop flag
-var repaint_loop = false;
+let repaintLoopFlag = false;
 
 // video
-var v = null;
+let v = null;
 
 // offset for 100ms 0.1s
-var offset_100ms = 10;
+let offset100ms = 10;
 
 const setJmObject = function (g, video, ec) {
     jm = g;
@@ -105,7 +105,7 @@ const setJmObject = function (g, video, ec) {
 }
 
 const setOffset100ms = (duration) => {
-    offset_100ms = Math.floor((0.1 / duration) * VIDEO_WIDTH);
+    offset100ms = Math.floor((0.1 / duration) * VIDEO_WIDTH);
 }
 
 const initEditMode = (type) => {
@@ -152,15 +152,15 @@ const initEditMode = (type) => {
     }
 
 
-    repaint_loop = true;
+    repaintLoopFlag = true;
 
     arrow.visible = false;
     resizeRect.visible = false;
 
-    edit_mode_status = "add";
-    edit_mode_type = type;
+    editModeStatus = "add";
+    editModeType = type;
 
-    g_paint();
+    elementPaintLoop();
 
 }
 
@@ -169,7 +169,7 @@ const updateEditMode = (el) => {
     let type = el.type;
     let o = el.object;
 
-    update_el = el;
+    updateEl = el;
 
     if (type === "rect") {
 
@@ -223,13 +223,13 @@ const updateEditMode = (el) => {
         resetRectByLabel(labelRect, label);
     }
 
-    edit_mode_status = "update"
-    edit_mode_type = el.type;
+    editModeStatus = "update"
+    editModeType = el.type;
 
 
-    repaint_loop = true;
+    repaintLoopFlag = true;
 
-    g_paint();
+    elementPaintLoop();
 
 }
 
@@ -250,23 +250,86 @@ const resetRectByLabel = (r, l) => {
     r.initPoints();
 }
 
-const draw_el = (el) => {
+const drawElement = (el) => {
     let canvas = el.jm.canvas;
-    let el_ctx = canvas.getContext('2d');
+    let ctx = canvas.getContext('2d');
 
-    el_ctx.beginPath();
-    el_ctx.fillStyle = "#000";
-    el_ctx.fillRect(0, 0, VIDEO_WIDTH, 20);
-    el_ctx.fillStyle = "#FFF";
-    el_ctx.fillRect(1, 1, VIDEO_WIDTH - 2 , 20 - 2);
+    ctx.beginPath();
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, VIDEO_WIDTH, 20);
+    ctx.fillStyle = "#FFF";
+    ctx.fillRect(1, 1, VIDEO_WIDTH - 2 , 20 - 2);
 
-    el_ctx.fillStyle = "#8F8";
+    ctx.fillStyle = "#8F8";
+    ctx.fillRect(el.left + 1, 1, (el.right - el.left), 20 - 2);
 
-    el_ctx.fillRect(el.left + 1, 1, (el.right - el.left), 20 - 2);
-    el_ctx.stroke();
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "#000";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(el.type, el.left + 3, 20, (el.right - el.left));
 
-    return el_ctx;
+    ctx.stroke();
+
+    return ctx;
 }
+
+const buildArrowObject = () => {
+    let o = jm.createShape("arrawline", {
+        style: {stroke: 'red', lineWidth: 5},
+        start: {x: arrow.start.x, y: arrow.start.y},
+        end: {x: arrow.end.x, y: arrow.end.y},
+    });
+
+    o.style.lineWidth = 5;
+    o.arraw.offsetX = 9;
+    o.arraw.offsetY = 40;
+
+    return o;
+}
+
+const buildRectObject = () => {
+    return jm.createShape("rect", {
+        style: {stroke: 'red', lineWidth: 3},
+        position: {x: resizeRect.position.x, y: resizeRect.position.y},
+        width: resizeRect.width,
+        height: resizeRect.height
+    });
+}
+
+const buildLabelObject = () => {
+    return jm.createShape("label", {
+        style: Object.assign({}, label.style),
+        center: Object.assign({}, label.center),
+        text: label.text
+    });
+}
+
+const buttonConfirmClick = () => {
+
+    unbindJmEvent();
+    resizeRect.visible = false;
+    arrow.visible = false;
+    label.visible = false;
+    labelRect.visible = false;
+
+    repaintLoopFlag = false;
+    exit_callback(editModeStatus, editModeType, updateEl);
+
+    return true;
+}
+
+const buttonCancelClick = () => {
+    // unbind event
+    unbindJmEvent();
+    resizeRect.visible = false;
+    arrow.visible = false;
+    label.visible = false;
+    labelRect.visible = false;
+    repaintLoopFlag = false;
+    exit_callback("");
+}
+
+
 const jm_mousedown_label = (e) => {
     if (jm.cursor === "move") {
         label.move_pos = Object.assign({}, e.position)
@@ -274,7 +337,7 @@ const jm_mousedown_label = (e) => {
 
 }
 
-const  jm_mousemove_label = (e) => {
+const jm_mousemove_label = (e) => {
 
     if (   (e.position.x > labelRect.position.x && e.position.x < labelRect.position.x + labelRect.width)
         && (e.position.y > labelRect.position.y && e.position.y < labelRect.position.y + labelRect.height)){
@@ -295,15 +358,14 @@ const  jm_mousemove_label = (e) => {
     }
 }
 
-const jm_mouseup_label = (e) => {
+const jm_mouseup_label = () => {
     label.move_pos = null;
 }
 
 const jm_mousedown = (e) => {
-    let event = e.event;
     //set start position
 
-    if (edit_mode_type === "rect") {
+    if (editModeType === "rect") {
         if (resizeRect.visible)
             return;
 
@@ -315,7 +377,7 @@ const jm_mousedown = (e) => {
         resizeRect.visible = true;
     }
 
-    if (edit_mode_type === "arrow") {
+    if (editModeType === "arrow") {
         if (arrow.visible)
             return;
 
@@ -335,9 +397,9 @@ const jm_mousedown = (e) => {
 }
 
 const jm_mousedown_start_move = (e) => {
-    let event = e.event;
+
     //set start position
-    if (edit_mode_type === "rect") {
+    if (editModeType === "rect") {
         if (!resizeRect.visible)
             return;
         if (   (e.position.x > resizeRect.position.x && e.position.x < resizeRect.position.x + resizeRect.width)
@@ -347,7 +409,7 @@ const jm_mousedown_start_move = (e) => {
         }
     }
 
-    if (edit_mode_type === "arrow") {
+    if (editModeType === "arrow") {
         if (arrow.move_status === "move_start") {
 
             arrow.start_pos = {x: e.position.x, y: e.position.y};
@@ -373,7 +435,7 @@ const jm_mousemove = (e) => {
     if (event.buttons === 0)
         return ;
 
-    if (edit_mode_type === "rect") {
+    if (editModeType === "rect") {
 
         if (!resizeRect.startposition)
             return;
@@ -391,7 +453,7 @@ const jm_mousemove = (e) => {
         resizeRect.reset();
     }
 
-    if (edit_mode_type === "arrow") {
+    if (editModeType === "arrow") {
         if (!arrow.move_position)
             return;
 
@@ -404,10 +466,9 @@ const jm_mousemove = (e) => {
 }
 
 const jm_mousemove_move_el = (e) => {
-    let event = e.event;
 
     //check mouse position for cursor
-    if (edit_mode_type === "rect") {
+    if (editModeType === "rect") {
         if (   (e.position.x > resizeRect.position.x && e.position.x < resizeRect.position.x + resizeRect.width)
             && (e.position.y > resizeRect.position.y && e.position.y < resizeRect.position.y + resizeRect.height)){
             jm.canvas.style.cursor = "move";
@@ -428,7 +489,7 @@ const jm_mousemove_move_el = (e) => {
         }
     }
 
-    if (edit_mode_type === "arrow") {
+    if (editModeType === "arrow") {
         //check start or end
         if (Math.abs(e.position.x - arrow.start.x) <= 5 && Math.abs(e.position.y - arrow.start.y) <= 5) {
             arrow.move_status = "move_start";
@@ -477,18 +538,18 @@ const jm_mousemove_move_el = (e) => {
 
 }
 
-const jm_mouseup = (e) => {
+const jm_mouseup = () => {
     resizeRect.startposition = null;
     arrow.move_position = null;
 
     // release event
-    unbind_jm_event();
+    unbindJmEvent();
 
     jm.bind("mousedown", jm_mousedown_start_move);
     jm.bind("mousemove", jm_mousemove_move_el);
     jm.bind("mouseup", jm_mouseup_end_move);
 
-    if (edit_mode_type === "arrow") {
+    if (editModeType === "arrow") {
         const arrow_mouse_down = (e) => {
             if (!arrow.move_status)
                 arrow.move_position = {
@@ -497,16 +558,16 @@ const jm_mouseup = (e) => {
                 }
         }
 
-        const arrow_mouse_move = (e) => {
+        const arrow_mouse_move = () => {
             if (!arrow.move_status)
                 jm.cursor = "move";
         }
 
-        const arrow_mouse_leave = (e) => {
+        const arrow_mouse_leave = () => {
             jm.cursor = "default";
         }
 
-        const arrow_mouse_up = (e) => {
+        const arrow_mouse_up = () => {
             arrow.move_position = null;
             arrow.start_pos = null;
             arrow.end_pos = null;
@@ -528,10 +589,10 @@ const jm_mouseup = (e) => {
     }
 }
 
-const jm_mouseup_end_move = (e) => {
+const jm_mouseup_end_move = () => {
     resizeRect.old_position = "";
 
-    if (edit_mode_type === "arrow") {
+    if (editModeType === "arrow") {
         arrow.move_position = null;
         arrow.start_pos = null;
         arrow.end_pos = null;
@@ -549,70 +610,8 @@ const buildShapeObject = (type) => {
         return buildLabelObject();
 
 }
-const buildArrowObject = () => {
-    let o = jm.createShape("arrawline", {
-        style: {stroke: 'red', lineWidth: 5},
-        start: {x: arrow.start.x, y: arrow.start.y},
-        end: {x: arrow.end.x, y: arrow.end.y},
-    });
 
-    o.style.lineWidth = 5;
-    o.arraw.offsetX = 9;
-    o.arraw.offsetY = 40;
-
-    return o;
-}
-
-const buildRectObject = () => {
-    return jm.createShape("rect", {
-        style: {stroke: 'red', lineWidth: 3},
-        position: {x: resizeRect.position.x, y: resizeRect.position.y},
-        width: resizeRect.width,
-        height: resizeRect.height
-    });
-}
-
-const buildLabelObject = () => {
-    return jm.createShape("label", {
-        style: Object.assign({}, label.style),
-        center: Object.assign({}, label.center),
-        text: label.text
-    });
-}
-
-const jm_confirm = () => {
-    unbind_jm_event();
-    resizeRect.visible = false;
-    arrow.visible = false;
-    label.visible = false;
-    labelRect.visible = false;
-
-    repaint_loop = false;
-    exit_callback(edit_mode_status, edit_mode_type, update_el);
-
-    // {
-    //     position : {
-    //         x: resizeRect.position.x,
-    //             y: resizeRect.position.y
-    //     },
-    //     width: resizeRect.width,
-    //         height: resizeRect.height
-    // }
-    return true;
-}
-
-const jm_cancel = () => {
-    // unbind event
-    unbind_jm_event();
-    resizeRect.visible = false;
-    arrow.visible = false;
-    label.visible = false;
-    labelRect.visible = false;
-    repaint_loop = false;
-    exit_callback("");
-}
-
-const jm_label_change = (e) => {
+const labelTextChange = (e) => {
     label.text = e.target.value;
     label.width = 0;
 
@@ -622,7 +621,7 @@ const jm_label_change = (e) => {
     resetRectByLabel(labelRect, label);
 }
 
-const unbind_jm_event = () => {
+const unbindJmEvent = () => {
     jm.unbind("mousemove", jm_mousemove);
     jm.unbind("mouseup", jm_mouseup);
     jm.unbind("mousedown", jm_mousedown);
@@ -676,8 +675,8 @@ const el_mousemove = (e) => {
             case "left": {
                 if (e.layerX <= 0)
                     el.left = 0;
-                else if (e.layerX > el.right - offset_100ms)
-                    el.left = el.right - offset_100ms;
+                else if (e.layerX > el.right - offset100ms)
+                    el.left = el.right - offset100ms;
                 else
                     el.left = e.layerX;
 
@@ -689,8 +688,8 @@ const el_mousemove = (e) => {
             case "right": {
                 if (el.right >= VIDEO_WIDTH)
                     el.right = VIDEO_WIDTH;
-                else if (el.right < el.left + offset_100ms)
-                    el.right = el.left + offset_100ms;
+                else if (el.right < el.left + offset100ms)
+                    el.right = el.left + offset100ms;
                 else
                     el.right = e.layerX;
 
@@ -700,6 +699,9 @@ const el_mousemove = (e) => {
             }
 
             case "move": {
+                if (!el.move_start)
+                    break;
+
                 let offset = e.layerX - el.move_start;
 
                 if (el.left + offset <= 0){
@@ -738,15 +740,8 @@ const el_mouseup = (e) => {
 
 };
 
-const el_visible = (e) => {
 
-}
-
-const el_deleted = () => {
-    
-}
-
-const g_paint = () => {
+const elementPaintLoop = () => {
     // set a start/stop flag
     if (jm.needUpdate) {
         jm.redraw();
@@ -754,207 +749,8 @@ const g_paint = () => {
 
 
     setTimeout(() => {
-        if (repaint_loop)
-            g_paint();
+        if (repaintLoopFlag)
+            elementPaintLoop();
     }, 50)
 
 };
-
-/*
-    var action_rect = null;
-    var action_arrawline = null;
-    var action_label = null;
-    var edit_state = false
-
-    g.bind("mousedown", (event) => {
-
-
-        if ($(".js-arrawline").prop("checked")) {
-
-            $(".js-arrawline-editor").show();
-            $(".js-hint").hide();
-
-            //console.log(event);
-            action_arrawline = g.createShape("arrawline", {
-                style: {stroke:"#ccc", lineType:"dotted", lineWidth: 3, dashLength: 20},
-                start: {x: event.position.x, y: event.position.y},
-                end: {x: event.position.x, y: event.position.y}
-            })
-
-            action_arrawline.resizing = true;
-
-            g.children.add(action_arrawline); //temp rect
-
-            action_arrawline.start_time = video.currentTime - 0.001 //for show at this time point
-            action_arrawline.end_time = video.currentTime + 3
-
-            //update input
-            $("input[placeholder=startx]").val(action_arrawline.start.x);
-            $("input[placeholder=starty]").val(action_arrawline.start.y);
-
-            edit_state = true;
-        }
-
-        if ($(".js-label").prop("checked") && action_label == null && !edit_state) {
-
-            $(".js-label-editor").show();
-            $(".js-hint").hide();
-
-            //console.log(event);
-            action_label = g.createShape("label", {
-                style: {
-                    stroke:"#ccc",
-                    fill: "#ccc",
-                    textAlign: 'left',
-                    font: "48px Arial",
-                    border: {
-                        left:1,
-                        top:1,
-                        right:1,
-                        bottom:1,
-                        style: {
-                            stroke: 'red'
-                        }
-                    },
-                },
-                position: {x: event.position.x, y: event.position.y},
-                text: "demo text",
-
-            })
-
-            action_label.resizing = true;
-
-            g.children.add(action_label); //temp rect
-
-            action_label.start_time = video.currentTime - 0.001 //for show at this time point
-            action_label.end_time = video.currentTime + 3
-
-            //update input
-            $("input[placeholder=ltop]").val(action_label.position.y);
-            $("input[placeholder=lleft]").val(action_label.position.x);
-
-            edit_state = true;
-        }
-
-        return true;
-    });
-    //
-    g.bind("mousemove", (event) => {
-
-        $(".js-mouse_top").val(event.position.y);
-        $(".js-mouse_left").val(event.position.x);
-
-        if (true && action_rect !== null && edit_state) {
-
-            if (event.event.buttons === 0)
-                return ;
-
-            if (!action_rect.resizing)
-                return ;
-
-            action_rect.width = event.position.x - action_rect.position.x;
-            action_rect.height = event.position.y - action_rect.position.y;
-
-            //update input
-            $("input[placeholder=width]").val(action_rect.width);
-            $("input[placeholder=height]").val(action_rect.height);
-
-            return ;
-        }
-
-        if ($(".js-arrawline").prop("checked") && action_arrawline !== null && edit_state) {
-
-            if (event.event.buttons === 0)
-                return ;
-
-            if (!action_arrawline.resizing)
-                return ;
-
-            action_arrawline.end.x = event.position.x;
-            action_arrawline.end.y = event.position.y;
-
-            //update input
-            $("input[placeholder=endx]").val(action_arrawline.end.x);
-            $("input[placeholder=endy]").val(action_arrawline.end.y);
-
-            return true;
-        }
-
-        if ($(".js-label").prop("checked") && action_label !== null && edit_state) {
-
-            if (event.event.buttons === 0)
-                return ;
-
-            if (!action_label.resizing)
-                return ;
-
-            action_label.width = event.position.x - action_label.position.x;
-            action_label.height = event.position.y - action_label.position.y;
-            action_label.style.font = action_label.height - 4 + "px Arial"; // TODO: has a bug
-
-            //update input
-            $("input[placeholder=size]").val(action_label.style.fontSize);
-
-
-            return true;
-        }
-
-    });
-
-    g.bind("mouseup", (event) => {
-        //debugger;
-        if (true && action_rect !== null && edit_state) {
-
-            if (action_rect.width < 2 && action_rect.height < 2) {
-                exit_edit_state("rect");
-            }
-            action_rect.style.stroke = "#F00";
-            action_rect.canMove(true);
-            action_rect.bind("moveend", function() {
-                $("input[placeholder=top]").val(action_rect.position.y);
-                $("input[placeholder=left]").val(action_rect.position.x);
-            });
-            action_rect.resizing = false;
-
-            return true;
-        }
-
-        if ($(".js-arrawline").prop("checked") && action_arrawline !== null && edit_state) {
-            if (action_arrawline === null) {
-                return ;
-            }
-
-            if (action_arrawline.width < 2 && action_arrawline.height < 2) {
-                exit_edit_state("arrawline");
-            }
-            action_arrawline.style.stroke = "#F00";
-            action_arrawline.canMove(true);
-            action_arrawline.bind("moveend", function() {
-                $("input[placeholder=starty]").val(action_arrawline.start.y);
-                $("input[placeholder=startx]").val(action_arrawline.start.x);
-                $("input[placeholder=endy]").val(action_arrawline.end.y);
-                $("input[placeholder=endx]").val(action_arrawline.end.x);
-            });
-
-            action_arrawline.resizing = false;
-
-            return true;
-        }
-
-        if ($(".js-label").prop("checked") && action_label !== null && edit_state) {
-
-            if (action_label.width < 2 && action_label.height < 2) {
-                exit_edit_state("label");
-            }
-            // action_label.style.stroke = "#F00";
-            action_label.canMove(true);
-            action_label.bind("moveend", function() {
-                $("input[placeholder=ltop]").val(action_label.position.y);
-                $("input[placeholder=lleft]").val(action_label.position.x);
-            });
-            action_label.resizing = false;
-
-            return true;
-        }
-    });
-*/
