@@ -15,13 +15,13 @@
 </style>
 </head>
 <body>
-<div class="cover" >
+<div class="cover" id="cover">
     <div class="paint-pad" id="paint-pad"></div>
-    <div class="button-div" ><label class="label label-txt">Label Text:
-        <input class="form-control label-txt" type="text" value="Demo Text"></label>
+    <div class="button-div" ><label class="label label-txt" id="label-text">Label Text:
+        <input class="form-control label-txt" id="label-txt-input" type="text" value="Demo Text"></label>
         <hr class="label-txt">
-        <button class="btn btn-primary confirm-edit" >Confirm</button>
-        <button class="btn btn-light cancel-edit" >Cancel</button></div>
+        <button class="btn btn-primary confirm-edit" id="confirm-edit" >Confirm</button>
+        <button class="btn btn-light cancel-edit" id="cancel-edit">Cancel</button></div>
 </div>
 <div class="header">
     <div class="content">
@@ -46,7 +46,7 @@
 </div><!--div id="canvas-container" class="graph">123</div-->
 <hr>
 <div class="content" style="margin-bottom: 5px; padding-bottom: 0;">
-    <div class="keyframebar" id="keyframebar" style="width: 100%;height:130px">
+    <div class="keyframebar" id="kf_container" style="width: 100%;height:130px">
     </div>
 </div>
 <div class="content elementbars" id="elementbars">
@@ -84,17 +84,18 @@
 <script >
 
     const player = videojs('video-1', {controls: true});
-    const video = $("#video-1 video").get(0);
+    const video = document.getElementById("video-1_html5_api");
+    const kfContainer = document.getElementById("kf_container");
 
-    const g1 = jmGraph.create('keyframebar', {
-        width: $("#keyframebar").width(),
-        height: $("#keyframebar").height(),
+    const jmKeyFrame = jmGraph.create('kf_container', {
+        width: kfContainer.clientWidth,
+        height: kfContainer.clientHeight,
     });
 
-    const kf_canvas = g1.canvas;
+    const kfCanvas = jmKeyFrame.canvas;
 
-    let jm_player_ctx = null;
-    let jm_player = null;
+    let jmPlayerCtx = null;
+    let jmPlayer = null;
 
     const initPlayer = () => {
         video.classList.add('vjs-hidden');
@@ -104,90 +105,92 @@
         container.style.bottom = 0;
         container.removeChild(container.firstChild);
 
-        jm_player = jmGraph.create('vjs-text-track-display', {
+        jmPlayer = jmGraph.create('vjs-text-track-display', {
             width: container.clientWidth,
             height: container.clientHeight,
         });
 
-        jm_player_ctx = jm_player.canvas.getContext("2d");
-        jm_player.redraw(); //init paint pad
+        jmPlayerCtx = jmPlayer.canvas.getContext("2d");
+        jmPlayer.redraw(); //init paint pad
 
         setOffset100ms(video.duration);
 
         video.addEventListener("timeupdate", () => {
-            jm_player.needUpdate = true;
+            jmPlayer.needUpdate = true;
         });
 
         //start render
-        raf_update();
+        rafUpdate();
 
     }
 
-    const kf = new KeyFrame(kf_canvas, video);
-    const el_list = [];
+    const kf = new KeyFrame(kfCanvas, video);
+    const elementList = [];
 
     const paint = jmGraph.create('paint-pad', {
         width: 800,
         height: 450,
     });
 
-    let el_id_index = 0;
+    let elementIdIndex = 0;
 
-    const add_new_element = (type) => {
-        let id = el_id_index++;
-        let el_object = buildShapeObject(type);
-        let el_id_name = "el_" + id;
-        let el_html = $("<div class='elementbar' id='" + el_id_name + "' data-index='" + id + "'>" +
-            "<input type='checkbox' class='el_checkbox' alt='Visible or not' checked />" +
-            "<span class='icon-trash el-trash' title='delete'></span>" +
-            "<span class='icon-edit el-edit' title='edit'></span>" +
-            "</div>");
+    const addNewElement = (type) => {
+        const id = elementIdIndex ++;
+        const elObject = buildShapeObject(type);
+        const elementDomId = "el_" + id;
+        const elHtmlDom = document.createElement("div");
+            elHtmlDom.id = elementDomId;
+            elHtmlDom.classList.add("elementbar");
+            elHtmlDom.innerHTML =
+                "<input type='checkbox' class='el_checkbox' alt='Visible or not' checked />" +
+                "<span class='icon-trash el-trash' title='delete'></span>" +
+                "<span class='icon-edit el-edit' title='edit'></span>";
 
-        $(".elementbars").append(el_html);
+        document.getElementById("elementbars").appendChild(elHtmlDom);
 
         let start = video.currentTime;
         let end = video.currentTime + 2 > video.duration ? video.duration: video.currentTime + 2;
         let left = start / video.duration * (VIDEO_WIDTH - 2);
         let right = end / video.duration * (VIDEO_WIDTH -2);
 
-        var el_jm = jmGraph.create(el_id_name, {
-            width: document.getElementById(el_id_name).clientWidth,  // this is the size of video
-            height: document.getElementById(el_id_name).clientHeight,
+        const elJm = jmGraph.create(elementDomId, {
+            width: elHtmlDom.clientWidth,  // this is the size of video
+            height: elHtmlDom.clientHeight,
         });
 
         let el = {
             index: id,                          //unique id
             type: type,                         //type: rect arrow
-            object: el_object,                  //shape obj
+            object: elObject,                  //shape obj
             start_time: start,                  //start
             end_time: end,                      //end
             left: left,
             right: right,
-            dom: el_html.get(0),
-            jm: el_jm,
+            dom: elHtmlDom,
+            jm: elJm,
             updated: true,                      //TODO: no modi, no update
             check_visible: true
         };
 
-        el_object.el = el;
-        el_jm.canvas.el = el;
+        elObject.el = el;
+        elJm.canvas.el = el;
 
-        el_jm.canvas.addEventListener("mousemove", el_mousemove);
-        el_jm.canvas.addEventListener("mouseup", el_mouseup);
-        el_jm.canvas.addEventListener("mousedown", el_mousedown);
+        elJm.canvas.addEventListener("mousemove", el_mousemove);
+        elJm.canvas.addEventListener("mouseup", el_mouseup);
+        elJm.canvas.addEventListener("mousedown", el_mousedown);
 
-        jm_player.children.add(el_object);
+        jmPlayer.children.add(elObject);
 
-        el_list.push(el);
+        elementList.push(el);
 
         // visible
-        $("#" + el_id_name + " input").change((e) => {
-            el.check_visible = $("#" + el_id_name + " input").prop("checked");
+        elHtmlDom.getElementsByTagName("input")[0].addEventListener("change", (e) => {
+            el.check_visible = e.target.checked;
         });
 
         // deleted
-        $("#" + el_id_name + " .el-trash").click((e) => {
-            // invisible
+        elHtmlDom.getElementsByClassName("el-trash")[0].addEventListener("click", (e) => {
+            // remove the dom node
             el.object.remove();
             el.dom.parentNode.removeChild(el.dom);
 
@@ -195,9 +198,9 @@
             el.jm = null;
             el.dom = null;
 
-            for (var i = 0; i < el_list.length; i++) {
-                if (el_list[i].index === el.index) {
-                    el_list.splice(i, 1);
+            for (let i = 0; i < elementList.length; i++) {
+                if (elementList[i].index === el.index) {
+                    elementList.splice(i, 1);
                     break;
                 }
             }
@@ -205,101 +208,103 @@
         });
 
         // editable
-        $("#" + el_id_name + " .el-edit").click((e) => {
+        elHtmlDom.getElementsByClassName("el-edit")[0].addEventListener("click", (e) => {
             video.pause();
-
-            //
-            // if (video.currentTime < el.start_time)
-            //     video.currentTime = el.start_time;
-            //
-            // if (video.currentTime > el.end_time)
-            //     video.currentTime = el.end_time;
 
             // give el properties to rect
             updateEditMode(el);
 
             let body = document.getElementsByTagName("body")[0];
-            $(".cover")
-                .css("height", body.clientHeight)
-                .show();
+            let cover = document.getElementById("cover");
+            let label = document.getElementById("label-text");
+            let labelTxt = document.getElementById("label-txt-input");
+
+            cover.style.height = body.clientHeight + "px";
+            cover.style.display = "block";
 
             if (el.type === "label") {
-                $(".label-txt").show();
-                $("input.label-txt").val(el.object.text);
+                label.style.display = "block";
+                labelTxt.value = el.object.text;
 
             } else
-                $(".label-txt").hide();
+                label.style.display = "none";
         });
     };
+    const updateElement = (u_el) => {
+        let el_object = u_el.object;
 
-        const update_element = (u_el) => {
-            let el_object = u_el.object;
-
-            if (u_el.type === 'rect') {
-                el_object.position.x = resizeRect.position.x;
-                el_object.position.y = resizeRect.position.y;
-                el_object.width = resizeRect.width;
-                el_object.height = resizeRect.height;
-            }
-
-            if (u_el.type === 'arrow') {
-                el_object.start.x = arrow.start.x;
-                el_object.start.y = arrow.start.y;
-                el_object.end.x = arrow.end.x;
-                el_object.end.y = arrow.end.y;
-            }
-
-            if (u_el.type === "label") {
-                el_object.text = label.text;
-                el_object.center = Object.assign({}, label.center);
-                el_object.style = Object.assign({}, label.style);
-
-            }
+        if (u_el.type === 'rect') {
+            el_object.position.x = resizeRect.position.x;
+            el_object.position.y = resizeRect.position.y;
+            el_object.width = resizeRect.width;
+            el_object.height = resizeRect.height;
         }
 
-    const exit_edit_mode = (state, type,  u_el) => {
-        $(".cover").hide();
+        if (u_el.type === 'arrow') {
+            el_object.start.x = arrow.start.x;
+            el_object.start.y = arrow.start.y;
+            el_object.end.x = arrow.end.x;
+            el_object.end.y = arrow.end.y;
+        }
 
-        if (state === "add")
-            add_new_element(type);
+        if (u_el.type === "label") {
+            el_object.text = label.text;
+            el_object.center = Object.assign({}, label.center);
+            el_object.style = Object.assign({}, label.style);
 
-        if (state === "update") {
-            update_element(u_el);
         }
     }
 
-    $(".confirm-edit").click(jm_confirm);
-    $(".cancel-edit").click(jm_cancel);
-    $("input.label-txt").keyup(jm_label_change);
+    const exitEditMode = (state, type, u_el) => {
+        document.getElementById("cover").style.display = "none";
 
-    setJmObject(paint, video, exit_edit_mode);
+        if (state === "add")
+            addNewElement(type);
 
-    $(".el-menu").click((event)=>{
-        // go to edit mode
-        let body = document.getElementsByTagName("body")[0];
-        $(".cover")
-            .css("height", body.clientHeight)
-            .show();
+        if (state === "update") {
+            updateElement(u_el);
+        }
+    }
 
-        let type = $(event.target).data("type");
+    document.getElementById("confirm-edit").addEventListener("click", buttonConfirmClick);
+    document.getElementById("cancel-edit").addEventListener("click", buttonCancelClick);
+    document.getElementById("label-txt-input").addEventListener("keyup", labelTextChange);
 
-        if (type === "label") {
-            $(".label-txt").show();
-            $("input.label-txt").val("Demo Text");
-        } else
-            $(".label-txt").hide();
+    setJmObject(paint, video, exitEditMode);
 
-        initEditMode(type);
-    });
+    let menu = document.getElementsByClassName("el-menu");
+
+    for (let i = 0; i < menu.length; i++) {
+        menu[i].addEventListener("click", (event)=>{
+            // go to edit mode
+            let body = document.getElementsByTagName("body")[0];
+            let cover = document.getElementById("cover");
+            cover.style.height = body.clientHeight + "px";
+            cover.style.display = "block";
+            let label = document.getElementById("label-text");
+            let labelTxt = document.getElementById("label-txt-input");
+
+            let type = event.target.getAttribute("data-type");
+
+            if (type === "label") {
+                label.style.display = "block";
+                labelTxt.value = "Demo Text";
+            } else
+                label.style.display = "none";
+
+            initEditMode(type);
+        });
+    }
+
 
     // animation loop
-    const raf_update = function() {
+    const rafUpdate = function() {
 
-        if (jm_player_ctx && jm_player.needUpdate)
-           jm_player_ctx.drawImage(video, 0,0, jm_player_ctx.canvas.width, jm_player_ctx.canvas.height);
+        if (jmPlayerCtx && jmPlayer.needUpdate)
+            jmPlayerCtx.drawImage(video, 0,0, jmPlayerCtx.canvas.width, jmPlayerCtx.canvas.height);
 
-        if (jm_player && jm_player.children && jm_player.children.length) {
-            jm_player.children.each((i, item) => {
+        if (jmPlayer && jmPlayer.children && jmPlayer.children.length) {
+            jmPlayer.children.each((i, item) => {
                 item.visible = item.el.check_visible && (video.currentTime >= item.el.start_time && video.currentTime <= item.el.end_time);
                 if (item.visible)
                     item.paint();
@@ -320,23 +325,21 @@
             kf.updated = false;
         }
 
-        if (el_list.length > 0) {
-            for (var i = 0; i < el_list.length; i++) {
-                let el = el_list[i];
+        if (elementList.length > 0) {
+            for (var i = 0; i < elementList.length; i++) {
+                let el = elementList[i];
 
                 if (!el.updated)
                     continue;
 
-                let el_ctx = draw_el(el);
+                let el_ctx = drawElement(el);
 
                 kf.drawFloatLine(el_ctx, true);
             }
         }
 
-        requestAnimationFrame(raf_update);
+        requestAnimationFrame(rafUpdate);
     };
-
-
 
     /* When the user clicks on the button, toggle between hiding and showing the dropdown content */
     function myFunction() {

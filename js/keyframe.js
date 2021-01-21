@@ -15,9 +15,8 @@ const TIME_LABEL_WIDTH = 40;
 const INDEX_MARGIN_WIDTH = 2;
 
 
-
-function timeformat(seconds) {
-    var numberFormat = (num) => (num > 10 ? "" : "0") + num.toFixed(1); // 2.3 => 02.3
+function timeFormat(seconds) {
+    let numberFormat = (num) => (num > 10 ? "" : "0") + num.toFixed(1); // 2.3 => 02.3
 
     if (seconds < 60)
         return "00:" + numberFormat(seconds)
@@ -45,11 +44,11 @@ class KeyFrame {
         this.float_preview_div = document.createElement('div');
         this.float_preview_img = document.createElement('img');
 
-        this.init_FloatPreview(this.float_preview_div, this.float_preview_img);
+        this.initFloatPreview(this.float_preview_div, this.float_preview_img);
 
         this.cover_div = document.createElement("div");
 
-        this.init_CoverDiv(this.cover_div);
+        this.initCoverDiv(this.cover_div);
 
         // bind event
         canvas.addEventListener("mouseenter", this.canvasMouseEnter());
@@ -60,7 +59,7 @@ class KeyFrame {
         video.addEventListener("loadeddata", this.videoOnLoadedData());
     }
 
-    init_FloatPreview(div, img) {
+    initFloatPreview(div, img) {
         document.body.appendChild(div);
         div.appendChild(img);
         div.style.cssText =
@@ -74,7 +73,7 @@ class KeyFrame {
         img.style.cssText = "width:100%;height:100%;border-radius: inherit;";
     }
 
-    init_CoverDiv(div) {
+    initCoverDiv(div) {
         const video = this.video;
 
         video.parentNode.appendChild(div);
@@ -91,23 +90,23 @@ class KeyFrame {
 
     }
 
-    init_PreviewImages(imgs, itp, tl) {
+    initPreviewImages(imgs, itp, tl) {
         imgs = imgs || this.image_list;
         itp = itp || this.itp_list;
         tl = tl || this.tl_list;
 
-        for (var i = 0; i < MAX_KEY_FRAME; i++) {
+        for (let i = 0; i < MAX_KEY_FRAME; i++) {
             imgs[i] = document.createElement("IMG");
             itp[i] = video.duration / 20 * i;
         }
 
         // time labels
         tl.push("00:00");
-        tl.push(timeformat(video.duration / 5));
-        tl.push(timeformat(video.duration / 5 * 2));
-        tl.push(timeformat(video.duration / 5 * 3));
-        tl.push(timeformat(video.duration / 5 * 4));
-        tl.push(timeformat(video.duration));
+        tl.push(timeFormat(video.duration / 5));
+        tl.push(timeFormat(video.duration / 5 * 2));
+        tl.push(timeFormat(video.duration / 5 * 3));
+        tl.push(timeFormat(video.duration / 5 * 4));
+        tl.push(timeFormat(video.duration));
 
     }
 
@@ -152,7 +151,7 @@ class KeyFrame {
     }
 
     canvasMouseDown() {
-        var that = this;
+        const that = this;
         return (event) => {
             that.video.currentTime = that.video.duration * event.layerX / VIDEO_WIDTH;
             that.updated = true;
@@ -162,28 +161,28 @@ class KeyFrame {
     videoOnLoadedData() {
         console.log("video is loading...");
 
-        var that = this;
-        var video = that.video;
-        var imgs_list = that.image_list;
-        var time_point_list = that.itp_list;
-        var tl_list = that.tl_list;
-        var tmp_canvas = document.createElement("canvas");
-        tmp_canvas.width = VIDEO_WIDTH;
-        tmp_canvas.height = VIDEO_HEIGHT;
-        var tmp_canvas_ctx = tmp_canvas.getContext("2d");
-        var div = that.cover_div;
+        const that = this;
+        const video = that.video;
+        const imgsList = that.image_list;
+        const timePointList = that.itp_list;
+        const timeLabelList = that.tl_list;
+        const tmpCanvas = document.createElement("canvas");
+        tmpCanvas.width = VIDEO_WIDTH;
+        tmpCanvas.height = VIDEO_HEIGHT;
+        const tmpCanvasCtx = tmpCanvas.getContext("2d");
+        const div = that.cover_div;
 
         video.onloadeddata = null;
 
         return (event) => {
-            that.init_PreviewImages(imgs_list, time_point_list, tl_list);
+            that.initPreviewImages(imgsList, timePointList, timeLabelList);
 
             var i = 0;
             var time_update = function() {
                 if (i < MAX_KEY_FRAME) {
-                    tmp_canvas_ctx.drawImage(video,0,0, VIDEO_WIDTH, VIDEO_HEIGHT);
-                    imgs_list[i].setAttribute('src', tmp_canvas.toDataURL());
-                    video.currentTime = time_point_list[i];
+                    tmpCanvasCtx.drawImage(video,0,0, VIDEO_WIDTH, VIDEO_HEIGHT);
+                    imgsList[i].setAttribute('src', tmpCanvas.toDataURL());
+                    video.currentTime = timePointList[i];
                     i++;
                 } else {
                     video.currentTime = 0;
@@ -215,18 +214,18 @@ class KeyFrame {
 
     fillTimeLabel(index, ctx) {
         ctx = ctx || this.ctx;
-        var tl_list = this.tl_list;
+        const timeLabelList = this.tl_list;
 
-        let leftoffset = index * 160 + 2;
-        ctx.fillText(tl_list[index], leftoffset, 20 + 3);
+        let leftOffset = index * 160 + 2;
+        ctx.fillText(timeLabelList[index], leftOffset, 20 + 3);
     }
 
     fillAllTimeLabel(ctx) {
         ctx = ctx || this.ctx;
-        var tl_list = this.tl_list;
-        var that = this;
+        const timeLabelList = this.tl_list;
+        const that = this;
 
-        tl_list.forEach(function(el, index) {
+        timeLabelList.forEach(function(el, index) {
             that.fillTimeLabel(index, ctx);
         })
 
@@ -234,46 +233,46 @@ class KeyFrame {
 
     fillPreviewImage(index, ctx) {
         ctx = ctx || this.ctx;
-        var image_list = this.image_list;
+        const imageList = this.image_list;
 
-        ctx.drawImage(image_list[index],
+        ctx.drawImage(imageList[index],
             0, 0, VIDEO_WIDTH * CLIP_RATIO, VIDEO_HEIGHT,   //source
             index * THUMB_SMALL_WIDTH, TIME_LABEL_HEIGHT, THUMB_SMALL_WIDTH, THUMB_HEIGHT); //dest
     }
 
-    fillAllPreviewImages(image_list, ctx) {
+    fillAllPreviewImages(imageList, ctx) {
         ctx = ctx || this.ctx;
-        image_list = image_list || this.image_list;
+        imageList = imageList || this.image_list;
 
-        image_list.forEach((item,index) => {
+        imageList.forEach((item,index) => {
             this.fillPreviewImage(index);
         });
     }
 
     setFloatPreviewPosition() {
-        var event = this.mousemoveEvent;
-        var div = this.float_preview_div;
-        var image_list = this.image_list;
+        const event = this.mousemoveEvent;
+        const div = this.float_preview_div;
+        const imageList = this.image_list;
 
         if (!event)
             return ;
 
-        var index = Math.floor(event.layerX / 40);
+        let index = Math.floor(event.layerX / 40);
 
         if (index >= MAX_KEY_FRAME)
             return ;
 
         div.style.top = (event.pageY - event.layerY - 90) + "px";
         div.style.left = (event.pageX - 80)+ "px";
-        div.getElementsByTagName("img")[0].setAttribute("src", image_list[index].src);
+        div.getElementsByTagName("img")[0].setAttribute("src", imageList[index].src);
 
     }
 
-    drawFloatLine(ctx, just_line, other_event) {
+    drawFloatLine(ctx, justLine, otherEvent) {
         ctx = ctx || this.ctx;
-        just_line = !!just_line;
+        justLine = !!justLine;
 
-        var event = other_event || this.mousemoveEvent;
+        const event = otherEvent || this.mousemoveEvent;
 
         if (event && event.layerX > VIDEO_WIDTH)
             return;
@@ -287,7 +286,7 @@ class KeyFrame {
         ctx.lineWidth = 2;
         ctx.moveTo(event.layerX, 0);
 
-        if (!just_line) {
+        if (!justLine) {
             ctx.lineTo(event.layerX + 3, 0);
             ctx.lineTo(event.layerX, 3);
             ctx.lineTo(event.layerX - 3, 0);
@@ -297,9 +296,9 @@ class KeyFrame {
         ctx.lineTo(event.layerX, ctx.canvas.height);
         ctx.stroke();
 
-        if (!just_line) {
+        if (!justLine) {
             ctx.fillStyle = "#000"
-            ctx.fillText(timeformat(this.video.duration * (event.layerX / VIDEO_WIDTH)), event.layerX + 5, 10);
+            ctx.fillText(timeFormat(this.video.duration * (event.layerX / VIDEO_WIDTH)), event.layerX + 5, 10);
         }
 
     }
@@ -314,9 +313,5 @@ class KeyFrame {
         ctx.rect(video.currentTime / video.duration * VIDEO_WIDTH - 1, TIME_LABEL_HEIGHT, 2, THUMB_HEIGHT);
         ctx.stroke();
     }
-
-
-
-
 
 }
