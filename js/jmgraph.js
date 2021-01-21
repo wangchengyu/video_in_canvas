@@ -128,7 +128,7 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
 
 var shapes = {
   "arc": _jmArc.jmArc,
-  "arraw": _jmArraw.jmArraw,
+  "arrow": _jmArraw.jmArraw, // arraw ==> arrow
   "bezier": _jmBezier.jmBezier,
   "circle": _jmCircle.jmCircle,
   "harc": _jmHArc.jmHArc,
@@ -1532,13 +1532,15 @@ var jmControl = /*#__PURE__*/function (_jmProperty) {
          */
 
         this.__mvMonitor.mv = function (evt) {
-          var _this = self; //如果鼠标经过当前可移动控件，则显示可移动指针
+          var _this = self;
 
-          if(evt.path && evt.path.indexOf(_this)>-1) {
-          	_this.parent.canvas.style.cursor = 'move'
-          } else {
-            _this.parent.canvas.style.cursor = 'default'
-          }
+          //如果鼠标经过当前可移动控件，则显示可移动指针
+          // if (_this.parent.type !== "jmResize" && _this.type !== "jmResize")
+          //   if(evt.path && evt.path.indexOf(_this)>-1) {
+          //     _this.graph.canvas.style.cursor = 'move'
+          //   } else {
+          //     _this.graph.canvas.style.cursor = 'default'
+          //   }
 
           if (_this.__mvMonitor.mouseDown) {
             _this.parent.bounds = null;
@@ -1594,7 +1596,6 @@ var jmControl = /*#__PURE__*/function (_jmProperty) {
 
           if (_this.__mvMonitor.mouseDown) {
             _this.__mvMonitor.mouseDown = false;
-            _this.parent.canvas.style.cursor = 'default';
 
             _this.emit('moveend', {
               position: _this.__mvMonitor.curposition
@@ -1615,7 +1616,6 @@ var jmControl = /*#__PURE__*/function (_jmProperty) {
 
           if (_this.__mvMonitor.mouseDown) {
             _this.__mvMonitor.mouseDown = false;
-            _this.parent.canvas.style.cursor = 'default';
 
             _this.emit('moveend', {
               position: _this.__mvMonitor.curposition
@@ -5780,9 +5780,9 @@ var jmLabel = /*#__PURE__*/function (_jmControl) {
 
     params = params || {};
     _this = _super.call(this, params, t || 'jmLabel');
-    _this.style.font = _this.style.font || "48px Arial"; //TODO: here is problem
+    _this.style.font = _this.style.font || "15px Arial";
     _this.style.fontFamily = _this.style.fontFamily || 'Arial';
-    _this.style.fontSize = _this.style.fontSize || 60; // 显示不同的 textAlign 值
+    _this.style.fontSize = _this.style.fontSize || 15; // 显示不同的 textAlign 值
     //文字水平对齐
 
     _this.style.textAlign = _this.style.textAlign || 'left'; //文字垂直对齐
@@ -5867,7 +5867,7 @@ var jmLabel = /*#__PURE__*/function (_jmControl) {
       this.context.save(); // 修改字体，用来计算
 
       this.setStyle({
-        font: this.style.fontSize + 'px ' + this.style.fontFamily
+        font: this.style.font || this.style.fontSize + 'px ' + this.style.fontFamily
       }); //计算宽度
 
       this.__size = this.context.measureText ? this.context.measureText(this.text) : {
@@ -5986,6 +5986,7 @@ var jmLabel = /*#__PURE__*/function (_jmControl) {
     },
     set: function set(v) {
       this.needUpdate = true;
+
       return this.__pro('text', v);
     }
     /**
@@ -6136,7 +6137,7 @@ var jmLine = /*#__PURE__*/function (_jmPath) {
               y: start.y + dy * l,
               m: true
             });
-            l += dottedsp;
+            l += dashLen;
           }
 
           dottedstart = !dottedstart;
@@ -6727,13 +6728,24 @@ var jmResize = /*#__PURE__*/function (_jmRect) {
           this.needUpdate = true;
         }); //鼠标指针
 
+        r.inrect = false;
         r.bind('mousemove', function () {
-          var rectCursors = ['w-resize', 'nw-resize', 'n-resize', 'ne-resize', 'e-resize', 'se-resize', 's-resize', 'sw-resize'];
+          var rectCursors = ['ew-resize', 'nwse-resize', 'ns-resize', 'nesw-resize', 'ew-resize', 'nwse-resize', 'ns-resize', 'nesw-resize'];
+          //var rectCursors = ['w-resize', 'nw-resize', 'n-resize', 'ne-resize', 'e-resize', 'se-resize', 's-resize', 'sw-resize'];
           this.cursor = rectCursors[this.index];
+          if (!r.inrect) {
+            r.parent.emit('inrect', r);
+            r.inrect = true;
+          }
+
         });
+
         r.bind('mouseleave', function () {
           this.cursor = 'default';
+          r.inrect = false;
+          r.parent.emit('outrect', r);
         });
+
       }
     }
     /**
